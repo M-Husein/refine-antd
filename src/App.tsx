@@ -1,11 +1,17 @@
 import './App.scss';
 
-import { useState } from 'react';
+import { useState, useId, useEffect } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 
 export const App = () => {
+  const myId = useId();
   const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const loaderApp = document.getElementById('loaderApp');
+    if(loaderApp) loaderApp.hidden = true;
+  }, []);
 
   return (
     <>
@@ -19,7 +25,10 @@ export const App = () => {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
+        <button 
+          id={myId}
+          onClick={() => setCount((count) => count + 1)}
+        >
           count is {count}
         </button>
         <p>

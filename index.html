@@ -1,20 +1,47 @@
 <!doctype html>
-<html lang="en" translate="no" class="notranslate" dir="ltr">
+<html lang="%VITE_APP_LANG%" translate="no" class="notranslate" dir="ltr">
   <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="color-scheme" content="light"/>
-    <meta name="theme-color" content="#1677ff"/>
+    <meta name="color-scheme" content="%VITE_APP_COLOR_SCHEME%"/>
+    <meta name="theme-color" content="%VITE_APP_THEME_COLOR%"/>
     <!-- <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/> -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="format-detection" content="email=no, telephone=no, date=no, address=no"/>
+    <!-- SEO Support & Prevent Translation -->
+    <meta name="robots" content="index, follow, notranslate"/>
+    <!-- HTTP header = X-Robot-Tag: index, follow -->
+
+    <!-- Prevent Translation -->
     <meta name="google" content="notranslate"/>
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <title>vite-kit</title>
+    <!-- <link rel="icon" href="/favicon.ico" sizes="any"/> -->
+    <link rel="icon" href="/vite.svg" type="image/svg+xml"/>
+    <!-- <link rel="apple-touch-icon" href="/logo-180x180.png"/> -->
+    <title>%VITE_APP_NAME%</title>
+    <link rel="stylesheet" href="%CSS_URL%"/>
+    <!-- OR -->
+    <!-- <link rel="stylesheet" href="%VITE_CSS_URL%"/> -->
   </head>
   <body>
+    <div id="loaderApp" data-nosnippet>
+      <img src="/vite.svg" width="32" alt="" draggable="false"/>
+      <svg role="status" aria-label="Loading" stroke-width="2" viewBox="0 0 32 32" width="87" height="87" fill="none" stroke="#1677ff">
+        <circle stroke-width="2" r="12" cx="16" cy="16" fill="none" opacity="0.125"></circle>
+        <circle stroke-width="2" r="12" cx="16" cy="16" fill="none" stroke-dasharray="20 110">
+          <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 16 16" to="360 16 16" dur="750ms" repeatCount="indefinite"></animateTransform>
+        </circle>
+      </svg>
+    </div>
     <div id="root"></div>
+    <noscript>
+      <style>#loaderApp{display:none}.nojs{font-family:Arial;font-size:1rem}</style>
+      <div class="nojs" data-nosnippet>
+        <b style="font-size:3rem">⚠️</b>
+        <p>You must enable JavaScript to run %VITE_APP_NAME%.</p>
+        <a rel="noopener noreferrer" target="_blank" href="https://www.enablejavascript.io/">Guide</a>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
