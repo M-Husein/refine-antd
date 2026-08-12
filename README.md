@@ -75,3 +75,17 @@ export default defineConfig([
   },
 ])
 ```
+
+===
+
+## 📝 Vite Plugins Recommendations
+
+| Framework | Must-Have Plugins | Recommended/Notable Plugins |
+| :--- | :--- | :--- |
+| **General** | `vite-plugin-inspect`<br>`vite-plugin-checker`<br>`vite-plugin-pwa` | `unplugin-auto-import` |
+| **React** | `@vitejs/plugin-react` *or* `@vitejs/plugin-react-swc` | |
+| **Vue** | `@vitejs/plugin-vue` | `@vitejs/plugin-vue-jsx`<br>`unplugin-vue-components`<br>`vite-plugin-vue-devtools` |
+| **Svelte** | `@sveltejs/vite-plugin-svelte` | `@sveltejs/vite-plugin-svelte-inspector`<br>`@sveltejs/enhanced-img` |
+| **Angular** | `@analogjs/vite-plugin-angular` | `@oxc-angular/compiler`<br>`@nitedani/vite-plugin-angular` |
+
+For a more extensive list, the community-maintained (awesome-vite)[https://github.com/vitejs/awesome-vite] repository is the definitive resource.

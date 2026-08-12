@@ -24,8 +24,18 @@
   //   --q-bg-main: #1f1f1f;
   // }
 
+  .display-1, 
+  .display-2, 
+  .display-3, 
+  .display-4, 
+  .display-5, 
+  .display-6 {
+    font-weight: 300;
+    line-height: 1.2;
+  }
+
   // NOTE: Used fa svg icon compoonent (react-icons)
-  .align--1px {
+  .-align-px {
     vertical-align: -1px;
   }
 
@@ -43,21 +53,34 @@
     pointer-events: auto;
   }
 
-  .after-no::after {
+  /*
+    https://getbootstrap.com/docs/5.3/helpers/stretched-link/
+  */
+  // .stretched-link::after 
+  .blocker::after {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    content: "";
+  }
+
+  // .after-no::after (OLD name)
+  .no-after::after {
     content: none !important;
   }
 
-  .no-shadow {
-    box-shadow: none !important;
-  }
+  // Moved to tailwind.config plugin addUtilities
+  // .no-shadow {
+  //   box-shadow: none !important;
+  // }
 
   .min-h-fullscreen {
     @apply min-h-screen min-h-dvh;
   }
 
-  .mirror {
-    transform: scaleX(-1); // rotateY(180deg)
-  }
+  // .mirror {
+  //   transform: scaleX(-1); // rotateY(180deg)
+  // }
 
   .txt-pre-wrap {
     @apply whitespace-pre-wrap;
