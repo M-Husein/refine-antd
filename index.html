@@ -15,23 +15,50 @@
 
     <!-- Prevent Translation -->
     <meta name="google" content="notranslate"/>
-    <!-- <link rel="icon" href="/favicon.ico" sizes="any"/> -->
-    <link rel="icon" href="/vite.svg" type="image/svg+xml"/>
-    <!-- <link rel="apple-touch-icon" href="/logo-180x180.png"/> -->
+    <!-- <link rel="icon" href="/favicon.ico?v=%VITE_APP_VERSION%" sizes="any"/> -->
+    <link rel="icon" href="/vite.svg?v=%VITE_APP_VERSION%" type="image/svg+xml"/>
+    <!-- <link rel="apple-touch-icon" href="/logo-180x180.png?v=%VITE_APP_VERSION%"/> -->
+    <!-- Primary SEO -->
     <title>%VITE_APP_NAME%</title>
-    <link rel="stylesheet" href="%CSS_URL%"/>
+    <meta name="description" content="%VITE_APP_DESCRIPTION%"/>
+    <meta name="application-name" content="%VITE_APP_NAME%"/>
+    <meta name="apple-mobile-web-app-title" content="%VITE_APP_NAME%"/>
+    <!-- <link rel="canonical" href="%VITE_APP_ORIGIN%"/> -->
+
+    <!-- Open Graph -->
+    <!-- <meta property="og:type" content="website"/>
+    <meta property="og:url" content="%VITE_APP_ORIGIN%"/>
+    <meta property="og:title" content="%VITE_APP_NAME%"/>
+    <meta property="og:description" content="%VITE_APP_DESCRIPTION%"/>
+    <meta property="og:image" content="%VITE_APP_ORIGIN%/logo-180x180.png"/>
+    <meta property="og:image:alt" content="%VITE_APP_NAME% logo"/>
+    <meta property="og:site_name" content="%VITE_APP_NAME%"/> -->
+
+    <!-- Twitter Card -->
+    <!-- <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:site" content="@naiju_id"/>
+    <meta name="twitter:url" content="%VITE_APP_ORIGIN%"/>
+    <meta name="twitter:title" content="%VITE_APP_NAME%"/>
+    <meta name="twitter:description" content="%VITE_APP_DESCRIPTION%"/>
+    <meta name="twitter:image" content="%VITE_APP_ORIGIN%/logo-180x180.png"/>
+    <meta name="twitter:image:alt" content="%VITE_APP_NAME% logo"/> -->
+
+    <link rel="stylesheet" href="%CSS_URL%?v=%VITE_APP_VERSION%"/>
     <!-- OR -->
-    <!-- <link rel="stylesheet" href="%VITE_CSS_URL%"/> -->
+    <!-- <link rel="stylesheet" href="%VITE_CSS_URL%?v=%VITE_APP_VERSION%"/> -->
+     <!-- <script src="/js/app.js?v=%VITE_APP_VERSION%"></script> -->
   </head>
   <body>
     <div id="loaderApp" data-nosnippet>
-      <img src="/vite.svg" width="32" alt="" draggable="false"/>
+      <img src="/vite.svg?v=%VITE_APP_VERSION%" width="32" alt="" draggable="false"/>
       <svg role="status" aria-label="Loading" stroke-width="2" viewBox="0 0 32 32" width="87" height="87" fill="none" stroke="#1677ff">
         <circle stroke-width="2" r="12" cx="16" cy="16" fill="none" opacity="0.125"></circle>
         <circle stroke-width="2" r="12" cx="16" cy="16" fill="none" stroke-dasharray="20 110">
           <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 16 16" to="360 16 16" dur="750ms" repeatCount="indefinite"></animateTransform>
         </circle>
       </svg>
+      <!-- OR -->
+      <!-- <b class="spin-border" style="width:4rem;height:4rem" role="status" aria-label="Loading"></b> -->
     </div>
     <div id="root"></div>
     <noscript>

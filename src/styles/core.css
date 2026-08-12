@@ -11,7 +11,9 @@
 }
 
 html {
-  /* scrollbar-width: thin; */
+  /* 
+    scrollbar-width: thin; 
+  */
 
   /*
     stable
@@ -54,6 +56,11 @@ body {
   background-color: #001529;
 } */
 
+img, 
+svg {
+  vertical-align: middle;
+}
+
 label {
   display: inline-block;
 }
@@ -77,6 +84,11 @@ label {
 }
 /* .dark .txt-main {
   color: #fff;
+} */
+
+/* From https://getbootstrap.com/docs/5.3/utilities/text/#reset-color */
+/* .text-reset {
+  color: inherit !important;
 } */
 
 #loaderApp,

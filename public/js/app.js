@@ -1,0 +1,1 @@
+const _APP = Object.freeze({});
