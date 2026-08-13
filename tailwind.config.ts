@@ -30,15 +30,19 @@ export default {
         '1051': '1051',
         '1052': '1052',
       },
-      spacing: {
+      // spacing: {
         
-      },
+      // },
       fontSize: {
         '13': '13px', 
       },
       // backgroundColor
       colors: {
+        /**
+         * From https://getbootstrap.com/docs/5.3/utilities/text/#reset-color
+         */
         'reset': 'inherit !important',
+
         // 'orange1': '#ff7a00',
       },
       gridTemplateColumns: {
@@ -67,6 +71,14 @@ export default {
         },
         '.content-v-visible': {
           'content-visibility': 'visible',
+        },
+
+        '.disabled': {
+          'pointer-events': 'none',
+          'user-select': 'none',
+          // 'interactivity': 'inert',
+          '-webkit-user-drag': 'none',
+          'opacity': '.4',
         },
 
         '.no-shadow': {

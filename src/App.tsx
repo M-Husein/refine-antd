@@ -1,16 +1,6 @@
 import { useState, useId, useEffect } from 'react';
-// import reactLogo from './assets/react.svg';
-// import viteLogo from '/vite.svg';
-import { Placeholder } from '@/components/Placeholder';
-
-// const oneToSix = [1, 2, 3, 4, 5, 6];
-
-const useToggleSplashScreen = (hide: boolean = true) => {
-  useEffect(() => {
-    const loaderApp = document.getElementById('loaderApp');
-    if(loaderApp) loaderApp.hidden = hide;
-  }, []);
-};
+import reactLogo from './assets/react.svg';
+import viteLogo from '/vite.svg';
 
 export const App = () => {
   const myId = useId();
@@ -23,39 +13,61 @@ export const App = () => {
       <header
         className="sticky top-0 z-1 bg-blue-100 shadow py-2 px-4 text-center"
       >
-        <strong translate="no">
-          <Placeholder
-            text="VK"
-            title={import.meta.env.VITE_APP_NAME}
-            className="rounded"
-            // dy=".1em"
-            style={{
-              width: 33,
-              height: 33,
-              fontSize: 15,
-            }}
-          />
-        </strong>
+        <a href="/" translate="no">
+          <img src={viteLogo} className="logo" width={33} alt={import.meta.env.VITE_APP_NAME} />
+        </a>
       </header>
 
       <main className="p-4">
-        <button 
-          id={myId}
-          type="button"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          count is {count}
-        </button>
+        <section className="text-center">
+          <a href="https://vite.dev" target="_blank" rel="noopener noreferrer">
+            <img src={viteLogo} className="logo" alt="Vite logo" />
+          </a>
+          <a href="https://react.dev" target="_blank" rel="noopener noreferrer">
+            <img src={reactLogo} className="logo react" alt="React logo" />
+          </a>
+
+          <h1>Vite + React</h1>
+          
+          <button 
+            id={myId}
+            type="button"
+            onClick={() => setCount((count) => count + 1)}
+          >
+            count is {count}
+          </button>
+          <hr />
+          <p>
+            Edit <code>src/App.tsx</code> and save to test HMR
+          </p>
+          <p className="read-the-docs">
+            Click on the Vite and React logos to learn more
+          </p>
+        </section>
 
         <hr />
+
+        <h2>
+          Based on
+          {' '}
+          <a 
+            href="https://getbootstrap.com/docs/5.3/content/typography"
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            Bootstrap Typography
+          </a>
+        </h2>
         
         {/* Heading classes – include weight & line-height */}
-        <h1>h1. Bootstrap heading</h1>
-        <h2>h2. Bootstrap heading</h2>
-        <h3>h3. Bootstrap heading</h3>
-        <h4>h4. Bootstrap heading</h4>
-        <h5>h5. Bootstrap heading</h5>
-        <h6>h6. Bootstrap heading</h6>
+        <section>
+          <h1>h1. Bootstrap heading</h1>
+          <h2>h2. Bootstrap heading</h2>
+          <h3>h3. Bootstrap heading</h3>
+          <h4>h4. Bootstrap heading</h4>
+          <h5>h5. Bootstrap heading</h5>
+          <h6>h6. Bootstrap heading</h6>
+        </section>
 
         <hr />
 
@@ -69,10 +81,12 @@ export const App = () => {
         <hr />
 
         <h2>Customizing headings</h2>
-        <h3>
-          Fancy display heading{' '}
-          <small className="text-gray-600">With faded secondary text</small>
-        </h3>
+        <section>
+          <h3>
+            Fancy display heading{' '}
+            <small className="text-gray-600">With faded secondary text</small>
+          </h3>
+        </section>
         
         <hr />
         
@@ -87,12 +101,14 @@ export const App = () => {
         <hr />
 
         <h2>Display headings</h2>
-        <h1 className="display-1">Display 1</h1>
-        <h1 className="display-2">Display 2</h1>
-        <h1 className="display-3">Display 3</h1>
-        <h1 className="display-4">Display 4</h1>
-        <h1 className="display-5">Display 5</h1>
-        <h1 className="display-6">Display 6</h1>
+        <section>
+          <h1 className="display-1">Display 1</h1>
+          <h1 className="display-2">Display 2</h1>
+          <h1 className="display-3">Display 3</h1>
+          <h1 className="display-4">Display 4</h1>
+          <h1 className="display-5">Display 5</h1>
+          <h1 className="display-6">Display 6</h1>
+        </section>
 
         <hr />
 
@@ -112,30 +128,9 @@ export const App = () => {
   )
 }
 
-/*
-<>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src={viteLogo} className="logo" alt="Vite logo" />
-    </a>
-    <a href="https://react.dev" target="_blank">
-      <img src={reactLogo} className="logo react" alt="React logo" />
-    </a>
-  </div>
-  <h1>Vite + React</h1>
-  <div className="card">
-    <button 
-      id={myId}
-      onClick={() => setCount((count) => count + 1)}
-    >
-      count is {count}
-    </button>
-    <p>
-      Edit <code>src/App.tsx</code> and save to test HMR
-    </p>
-  </div>
-  <p className="read-the-docs">
-    Click on the Vite and React logos to learn more
-  </p>
-</>
-*/
+const useToggleSplashScreen = (hide: boolean = true) => {
+  useEffect(() => {
+    const loaderApp = document.getElementById('loaderApp');
+    if(loaderApp) loaderApp.hidden = hide;
+  }, []);
+}
