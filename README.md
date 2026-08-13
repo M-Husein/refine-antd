@@ -76,8 +76,6 @@ export default defineConfig([
 ])
 ```
 
-===
-
 ## 📝 Vite Plugins Recommendations
 
 | Framework | Must-Have Plugins | Recommended/Notable Plugins |

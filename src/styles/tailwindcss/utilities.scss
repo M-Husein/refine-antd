@@ -24,6 +24,14 @@
   //   --q-bg-main: #1f1f1f;
   // }
 
+  .min-h-fullscreen {
+    @apply min-h-screen min-h-dvh;
+  }
+
+  // .txt-pre-wrap {
+  //   @apply whitespace-pre-wrap;
+  // }
+
   .display-1, 
   .display-2, 
   .display-3, 
@@ -69,32 +77,7 @@
     content: none !important;
   }
 
-  // Moved to tailwind.config plugin addUtilities
-  // .no-shadow {
-  //   box-shadow: none !important;
-  // }
-
-  .min-h-fullscreen {
-    @apply min-h-screen min-h-dvh;
-  }
-
-  // .mirror {
-  //   transform: scaleX(-1); // rotateY(180deg)
-  // }
-
-  .txt-pre-wrap {
-    @apply whitespace-pre-wrap;
-  }
-
-  /*
-  content-visibility: visible;
-  content-visibility: hidden;
-  content-visibility: auto;
-  */
-
-  // .content-v-hide {
-  //   content-visibility: hidden;
-  // }
+  
 }
 
 // Always compile Here

@@ -41,4 +41,4 @@ createRoot(
   <StrictMode>
     <App />
   </StrictMode>
-)
+);

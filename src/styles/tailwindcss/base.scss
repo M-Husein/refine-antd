@@ -1,10 +1,20 @@
 @tailwind base;
 
 @layer base {
-  // :root {
-  //   --gradient-blue: linear-gradient(180deg,#079BDA 0%,#004B7E 100%);
-  // }
+  :root {
+    --q-font-sans-serif: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    
+    // --gradient-blue: linear-gradient(180deg,#079BDA 0%,#004B7E 100%);
+  }
   
+  body {
+    font-family: var(--q-font-sans-serif);
+  }
+
+  /* Navbar main */
+  .bg-nav {
+    background-color: var(--q-bg-nav);
+  }
 }
 
 // Always compile Here

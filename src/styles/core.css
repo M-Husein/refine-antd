@@ -1,6 +1,7 @@
 :root {
   --q-bg-main: #fff;
   --q-bg-nav: #dbeafe;
+  --q-body-color: #222;
 }
 
 *,
@@ -39,9 +40,12 @@ body {
 
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  /* font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
-  font-size: 14px;
-  line-height: 1.5714285714285714; */
+
+  background: var(--q-bg-main);
+  color: var(--q-body-color);
+  line-height: 1.5;
+  font-family: Arial;
+  font-size: 1rem;
 }
 
 [hidden]{
@@ -69,11 +73,6 @@ label {
   background-color: var(--q-bg-main);
 }
 
-/* Navbar main */
-.bg-nav {
-  background-color: var(--q-bg-nav);
-}
-
 /* :root.dark {
   --q-bg-main: #1f1f1f;
   --q-bg-nav: #1f1f1f;
@@ -84,11 +83,6 @@ label {
 }
 /* .dark .txt-main {
   color: #fff;
-} */
-
-/* From https://getbootstrap.com/docs/5.3/utilities/text/#reset-color */
-/* .text-reset {
-  color: inherit !important;
 } */
 
 #loaderApp,
@@ -119,7 +113,7 @@ label {
 }
 
 /* Option to hide next elements when show loader App. */
-#loaderApp:not([hidden]) ~ div {
+#loaderApp:not([hidden]) ~ * {
   interactivity: inert;
   user-select: none;
 }
