@@ -1,6 +1,8 @@
-# Vite Kit
+# Refine Antd
 
-## React + TypeScript + Vite
+![Refine Antd](https://raw.githubusercontent.com/M-Husein/refine-antd/refs/heads/main/public/media/img/vite-refine-antd.jpeg)
+
+## React + TypeScript + Vite + Refine + Antd
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
