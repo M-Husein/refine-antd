@@ -25,7 +25,9 @@
   // }
 
   .min-h-fullscreen {
-    @apply min-h-screen min-h-dvh;
+    // @apply min-h-screen min-h-dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   // .txt-pre-wrap {
@@ -72,7 +74,6 @@
     content: "";
   }
 
-  // .after-no::after (OLD name)
   .no-after::after {
     content: none !important;
   }

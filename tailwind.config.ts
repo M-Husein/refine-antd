@@ -7,6 +7,13 @@ export default {
     preflight: false,
   },
   separator: '_',
+
+  /**
+   * This generates utilities like #root .w-10, 
+   * which have specificity (1,1,0)
+   */
+  // important: '#root',
+
   content: [
     "./index.html",
     // "./tailwind_safelist.html", // For always compile some class
@@ -54,6 +61,16 @@ export default {
     // Custom
     plugin(({ addUtilities }) => {
       addUtilities({
+        /**
+         * reset or core
+         */
+        '[inert]': {
+          'pointer-events': 'none',
+          'user-select': 'none',
+          '-webkit-user-drag': 'none',
+          // 'opacity': '.4',
+        },
+
         '.scrollbar-gutter-auto': {
           'scrollbar-gutter': 'auto',
         },
@@ -73,17 +90,12 @@ export default {
           'content-visibility': 'visible',
         },
 
-        '.disabled': {
-          'pointer-events': 'none',
-          'user-select': 'none',
-          // 'interactivity': 'inert',
-          '-webkit-user-drag': 'none',
-          'opacity': '.4',
-        },
-
         '.no-shadow': {
           'box-shadow': 'none !important',
         },
+        // '.no-after::after': {
+        //   content: 'none !important'
+        // },
 
         '.mirror': {
           'transform': 'scaleX(-1)', // rotateY(180deg)

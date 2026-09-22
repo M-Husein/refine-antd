@@ -1,6 +1,6 @@
 :root {
   --q-bg-main: #fff;
-  --q-bg-nav: #dbeafe;
+  --q-bg-nav: #ffffe7; /* #dbeafe */
   --q-body-color: #222;
 }
 
@@ -113,10 +113,10 @@ label {
 }
 
 /* Option to hide next elements when show loader App. */
-#loaderApp:not([hidden]) ~ * {
+/* #loaderApp:not([hidden]) ~ * {
   interactivity: inert;
   user-select: none;
-}
+} */
 
 /* @-webkit-keyframes spin {
   to {

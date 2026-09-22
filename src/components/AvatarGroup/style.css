@@ -1,0 +1,36 @@
+.avatar-group  {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.avatar-group > * {
+  border: 3.5px solid #fff;
+  flex: none;
+  text-decoration: none;
+}
+
+/** @DevOptions : for dark border-color */
+/* .avatar-group.dark > * {
+  border-color: #111827;
+} */
+
+.avatar-group > * + * {
+  margin-left: var(--ml);
+}
+
+.avatar-group > *:hover {
+  z-index: 1;
+}
+
+.ava-rest {
+  display: grid;
+  place-content: center;
+  line-height: 1;
+  border-radius: 50%;
+  font-weight: 600;
+  color: #777;
+  background: #ddd;
+}

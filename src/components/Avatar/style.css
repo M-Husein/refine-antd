@@ -1,0 +1,32 @@
+.ava {
+  display: inline-block;
+  font-size: 0;
+  flex: none;
+  object-fit: cover;
+  overflow: hidden;
+  position: relative;
+}
+
+.ava[aria-label]::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items:  center;
+  font-weight: 500;
+  font-size: var(--fs);
+  background: var(--bg);
+  content: attr(aria-label);
+}
+
+.ava-loader {
+  background: #ddd;
+  cursor: progress;
+}
+
+.ava-light {
+  color: #fff;
+}
+
+.ava-dark {
+  color: #343a40;
+}

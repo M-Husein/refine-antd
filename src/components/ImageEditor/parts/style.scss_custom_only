@@ -1,0 +1,17 @@
+.drawing-mode-active .cropper-stencil-wrapper,
+.drawing-mode-active .cropper-bounding-box,
+.drawing-mode-active .cropper-line,
+.drawing-mode-active .cropper-point,
+.drawing-mode-active .advanced-cropper-stencil-wrapper {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important
+}
+
+.advanced-cropper__background-wrapper {
+  cursor: grab;
+}
+
+.advanced-cropper__background-wrapper:active {
+  cursor: grabbing;
+}

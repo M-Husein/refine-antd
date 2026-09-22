@@ -16,7 +16,7 @@
     <!-- Prevent Translation -->
     <meta name="google" content="notranslate"/>
     <!-- <link rel="icon" href="/favicon.ico?v=%VITE_APP_VERSION%" sizes="any"/> -->
-    <link rel="icon" href="/vite.svg?v=%VITE_APP_VERSION%" type="image/svg+xml"/>
+    <link rel="icon" href="/favicon.svg?v=%VITE_APP_VERSION%" type="image/svg+xml"/>
     <!-- <link rel="apple-touch-icon" href="/logo-180x180.png?v=%VITE_APP_VERSION%"/> -->
     <!-- Primary SEO -->
     <title>%VITE_APP_NAME%</title>
@@ -44,13 +44,12 @@
     <meta name="twitter:image:alt" content="%VITE_APP_NAME% logo"/> -->
 
     <link rel="stylesheet" href="%CSS_URL%?v=%VITE_APP_VERSION%"/>
-    <!-- OR -->
-    <!-- <link rel="stylesheet" href="%VITE_CSS_URL%?v=%VITE_APP_VERSION%"/> -->
-     <!-- <script src="/js/app.js?v=%VITE_APP_VERSION%"></script> -->
+    <script>const appName="%VITE_APP_NAME%";</script>
+    <script src="/js/app.js?v=%VITE_APP_VERSION%"></script>
   </head>
   <body>
     <div id="loaderApp" data-nosnippet>
-      <img src="/vite.svg?v=%VITE_APP_VERSION%" width="32" alt="" draggable="false"/>
+      <img src="/favicon.svg?v=%VITE_APP_VERSION%" width="32" alt="" draggable="false"/>
       <svg role="status" aria-label="Loading" stroke-width="2" viewBox="0 0 32 32" width="87" height="87" fill="none" stroke="#1677ff">
         <circle stroke-width="2" r="12" cx="16" cy="16" fill="none" opacity="0.125"></circle>
         <circle stroke-width="2" r="12" cx="16" cy="16" fill="none" stroke-dasharray="20 110">
