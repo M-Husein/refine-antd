@@ -34,6 +34,11 @@ export const RESOURCES: any[] = [
     meta: { parent: "components", label: "Form", icon: <FaCode /> },
   },
   {
+    name: "input-color",
+    list: "/docs/components/input-color",
+    meta: { parent: "components", label: "InputColor", icon: <FaCode /> },
+  },
+  {
     name: "avatar",
     list: "/docs/components/avatar",
     meta: { parent: "components", label: "Avatar", icon: <FaCode /> },
@@ -53,7 +58,11 @@ export const RESOURCES: any[] = [
     list: "/docs/components/icon-picker",
     meta: { parent: "components", label: "IconPicker", icon: <FaCode /> },
   },
-
+  {
+    name: "theme-editor",
+    list: "/docs/theme-editor",
+    meta: { label: "Theme Editor", icon: <b>🎨</b> }
+  },
   {
     name: "devs",
     list: "/docs/devs",

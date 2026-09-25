@@ -16,14 +16,14 @@ import { useState, useEffect, useCallback } from "react";
  * // Update on a button click
  * <button onClick={() => setTitle("New Title")}>Change</button>
  */
-export const useDocumentTitle = (initialTitle?: string) => {
+export const useDocumentTitle = (initialTitle?: string, separator = " • ") => {
   const [title, setTitleState] = useState<string | undefined>(initialTitle);
 
   useEffect(() => {
     if (typeof title === 'string' && title.trim()) {
-      document.title = title;
+      document.title = separator ? title + separator + APP.name : title;
     }
-  }, [title]);
+  }, [title, separator]);
 
   const setTitle = useCallback((newTitle: string) => {
     setTitleState(newTitle);

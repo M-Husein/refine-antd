@@ -26,7 +26,7 @@ const AVATAR_SRC = [
 ];
 
 export default function Page(){
-  useDocumentTitle("<Avatar /> - " + APP.name);
+  useDocumentTitle("<Avatar />");
 
   return (
     <div className="xl_max-w-screen-xl mx-auto">

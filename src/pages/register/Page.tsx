@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { HttpError, useRegister } from "@refinedev/core";
+import { type HttpError, useRegister } from "@refinedev/core";
 import { useTranslation } from 'react-i18next';
 import { Input, Button, Divider, message } from "antd"; // , Radio
 import { Link, useNavigate } from "react-router";

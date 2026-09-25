@@ -17,7 +17,7 @@ import { CircleSteps } from './components/CircleSteps';
 const sectionStyle = { minHeight: 'calc(100vh - 88px)' };
 
 export default function Page(){
-  useDocumentTitle("Devs • " + APP.name);
+  useDocumentTitle("Devs");
 
   const identity = useGetIdentity(); // { data: identity }
   // console.log('identity:', identity);
@@ -26,6 +26,7 @@ export default function Page(){
   const [messageApi, messageHolder] = message.useMessage();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [color, setColor] = useState('');
 
   const openNotification = (placement: any) => { // NotificationPlacement
     notifApi.info({
@@ -176,7 +177,12 @@ export default function Page(){
                 <Button>Show Tooltip</Button>
               </Tooltip>
 
-              <ColorPicker defaultValue="#1677ff" />
+              <ColorPicker 
+                showText 
+                allowClear
+                value={color}
+                onChange={(_val, css) => setColor(css)}
+              />
             </div>
 
             <hr />

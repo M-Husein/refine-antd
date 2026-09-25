@@ -3,16 +3,15 @@
 @layer components {
   // === SCROLL ===
   .q-scroll {
-    // FOR Firefox
-    --q-scrollbar-width: thin;
-    scrollbar-width: var(--q-scrollbar-width);
+    // --q-scrollbar-width: thin;
+    scrollbar-width: thin; // var(--q-scrollbar-width);
     scrollbar-color: #aaa transparent;
     // -webkit-overflow-scrolling: touch; // OPTION: From Bootstrap .table-responsive
   }
 
-  .scrollbar-auto {
-    scrollbar-width: auto;
-  }
+  // .scrollbar-auto {
+  //   scrollbar-width: auto;
+  // }
 
   // .q-scroll::-webkit-scrollbar {
   //   --q-scroll-size: 7px; // 9px
@@ -191,6 +190,8 @@
     width: 100vw;
     overflow-x: auto;
   }
+
+  // 
 }
 
 // Always compile Here

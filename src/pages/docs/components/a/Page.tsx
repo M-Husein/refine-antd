@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import { A } from '@/components/A';
 
 export default function Page(){
-  useDocumentTitle("<A /> - " + APP.name);
+  useDocumentTitle("<A />");
 
   return (
     <div className="xl_max-w-screen-xl mx-auto">

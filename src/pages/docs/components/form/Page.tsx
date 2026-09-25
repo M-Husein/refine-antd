@@ -5,7 +5,7 @@ import { Input, Button } from 'antd';
 import { Form } from '@/components/forms/Form';
 
 export default function Page(){
-  useDocumentTitle("<Form /> - " + APP.name);
+  useDocumentTitle("<Form />");
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 

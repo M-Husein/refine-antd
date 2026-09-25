@@ -51,6 +51,9 @@ export const A = ({
       tabIndex={disabled ? -1 : tabIndex}
       draggable={disabled ? false : draggable}
       onClick={handleClick}
+
+      // Optional: more strict
+      // onMouseEnter={(evt: any) => disabled && evt?.target.removeAttribute('href')}
     />
   );
 };

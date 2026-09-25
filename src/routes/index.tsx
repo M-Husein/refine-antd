@@ -111,10 +111,6 @@ export const routes: any[] = [
         index: true, 
         element: lazyComponent(lazy(() => import('@/pages/docs/home/Page'))) 
       },
-      { 
-        path: "devs", 
-        element: lazyComponent(lazy(() => import('@/pages/docs/devs/Page'))) 
-      },
       {
         path: "components", 
         children: [
@@ -135,6 +131,10 @@ export const routes: any[] = [
             element: lazyComponent(lazy(() => import('@/pages/docs/components/form/Page'))) 
           },
           { 
+            path: "input-color", 
+            element: lazyComponent(lazy(() => import('@/pages/docs/components/input-color/Page'))) 
+          },
+          { 
             path: "avatar", 
             element: lazyComponent(lazy(() => import('@/pages/docs/components/avatar/Page'))) 
           },
@@ -151,6 +151,14 @@ export const routes: any[] = [
             element: lazyComponent(lazy(() => import('@/pages/docs/components/icon-picker/Page'))) 
           },
         ]
+      },
+      { 
+        path: "theme-editor", 
+        element: lazyComponent(lazy(() => import('@/pages/docs/theme-editor/Page'))) 
+      },
+      { 
+        path: "devs", 
+        element: lazyComponent(lazy(() => import('@/pages/docs/devs/Page'))) 
       },
       // {
       //   path: "currencies", 

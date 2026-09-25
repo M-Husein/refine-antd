@@ -1,6 +1,6 @@
 // import { useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle"; // "@refinedev/react-router"
-import { HttpError, useList } from "@refinedev/core";
+import { type HttpError, useList } from "@refinedev/core";
 import { Card } from 'antd'; // , Button
 import { useTranslation } from 'react-i18next';
 

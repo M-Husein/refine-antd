@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Input, Button } from "antd";
-import { HttpError, useParsed, useTranslate, useNotification } from "@refinedev/core";
+import { type HttpError, useParsed, useTranslate, useNotification } from "@refinedev/core";
 import { useNavigate } from "react-router";
 import { useForm } from "@refinedev/react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

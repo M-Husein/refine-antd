@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Img } from '@/components/Img';
 
 export default function Page(){
-  useDocumentTitle("<Img /> - " + APP.name);
+  useDocumentTitle("<Img />");
 
   return (
     <div className="xl_max-w-screen-xl mx-auto">

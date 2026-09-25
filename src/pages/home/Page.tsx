@@ -1,6 +1,6 @@
 // import { useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-// import { HttpError, useOne, useNotification, useUpdate } from "@refinedev/core";
+// import { type HttpError, useOne, useNotification, useUpdate } from "@refinedev/core";
 import { Card } from 'antd';
 
 export default function Page(){

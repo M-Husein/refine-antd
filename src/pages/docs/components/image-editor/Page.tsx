@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { ImageEditor } from '@/components/ImageEditor';
 
 export default function Page(){
-  useDocumentTitle("<ImageEditor /> - " + APP.name);
+  useDocumentTitle("<ImageEditor />");
 
   const [file, setFile] = useState<string | null>(null);
 

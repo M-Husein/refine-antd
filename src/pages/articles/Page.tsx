@@ -1,6 +1,6 @@
 // import { useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { HttpError, useInfiniteList } from "@refinedev/core";
+import { type HttpError, useInfiniteList } from "@refinedev/core";
 import { Card, Button } from 'antd';
 // import { useTranslation } from 'react-i18next';
 import { getNextPageParam, flatPages } from '@/utils/refine';

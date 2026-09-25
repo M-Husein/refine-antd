@@ -4,7 +4,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { Placeholder } from '@/components/Placeholder';
 
 export default function Page(){
-  useDocumentTitle("<Placeholder /> - " + APP.name);
+  useDocumentTitle("<Placeholder />");
 
   return (
     <div className="xl_max-w-screen-xl mx-auto">

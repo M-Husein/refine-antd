@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { IconPicker } from '@/components/IconPicker';
 
 export default function Page(){
-  useDocumentTitle("<IconPicker /> - " + APP.name);
+  useDocumentTitle("<IconPicker />");
 
   return (
     <div className="xl_max-w-screen-xl mx-auto">

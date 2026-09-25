@@ -10,8 +10,9 @@ import {
   CircleStencil,
   RectangleStencil,
 } from 'react-advanced-cropper';
-import { Button, Popover, Select, Slider, ColorPicker, Space } from 'antd';
+import { Button, Popover, Select, Slider, Space } from 'antd'; // ColorPicker
 import { LuFlipVertical, LuZoomIn, LuZoomOut } from "react-icons/lu";
+import { InputColor } from '@/components/InputColor';
 import { useDrawingCanvas } from './useDrawingCanvas';
 import { useImageFilters } from './useImageFilters';
 import { aspectRatioOptions, presetSelectOptions } from './parts/constants';
@@ -362,12 +363,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                 content={
                   <div className="space-y-2">
                     <div>
-                      <label>Brush Color:</label>
+                      <label className="mb-1">Brush Color:</label>
                       <br />
-                      <ColorPicker 
-                        showText 
-                        allowClear 
-                        className="mt-1"
+                      <InputColor 
+                        // showText 
+                        // allowClear 
                         value={drawing.brushColor}
                         onChange={(_val, css) => {
                           // console.log({ _val, css })
