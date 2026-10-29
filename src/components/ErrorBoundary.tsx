@@ -1,6 +1,6 @@
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import type { ReactNode } from 'react'; // , ErrorInfo
-import { Result, Button } from 'antd';
+import { Button } from 'antd'; // import { Result, Button } from 'antd';
 import { useTranslate } from "@refinedev/core"; // useGetIdentity
 import { useNavigate } from "react-router";
 import { Info } from '@/components/Info';

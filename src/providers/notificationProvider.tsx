@@ -1,4 +1,4 @@
-import { NotificationProvider } from "@refinedev/core";
+import type { NotificationProvider } from "@refinedev/core";
 import { App, notification as staticNotification } from "antd";
 
 export const useNotificationProvider = (): NotificationProvider => {

@@ -17,22 +17,27 @@ interface AppConfig {
  * @var locales     : { id:"Indonesia", en:"English" }
  */
 declare const APP: Readonly<AppConfig>;
+declare global {
+  const APP: Readonly<AppConfig>;
+}
 
 // * @var socials     : ["google", "linkedin"]
 
 /**
  * @NOTE : For setup or app config in global window object
  */
-// declare global {
-//   interface Window {
-//     APP: {
-//       api: string,
-//       api2: string,
-//       ws: string,
-//       timeout: number,
-//     };
-//   }
-// }
+declare global {
+  interface Window {
+    __APP__?: {
+      page?: any;
+      user?: any;
+      [key: string]: any;
+    };
+    APP?: AppConfig;
+  }
+}
+
+export {};
 
 // // Laravel Starter kit
 // import type { route as routeFn } from 'ziggy-js';

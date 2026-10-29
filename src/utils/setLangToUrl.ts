@@ -1,4 +1,4 @@
-import { To } from 'react-router';
+import type { To } from 'react-router';
 
 export const setLangToUrl = (to: To, lang: string): To => {
   // Don't add lang if it's the default language (optional)

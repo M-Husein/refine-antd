@@ -6,7 +6,7 @@ export const isAdminRole = (user: any): boolean =>
 export const isUserSystem = (user: any): boolean => 
   isAdminRole(user) && user.username === 'SuperAdmin';
 
-export const getUser = (): UserLogged | null => window.__APP__.user; //  ?? null
+export const getUser = (): UserLogged | null => window.__APP__?.user ?? null; //  ?? null
 
 export const updateUser = <T extends object>(data: Partial<T>) => {
   let user = {
@@ -23,7 +23,11 @@ export const updateUser = <T extends object>(data: Partial<T>) => {
     }
   }
 
-  window.__APP__.user = user;
+  if (window.__APP__) {
+    window.__APP__.user = user;
+  } else {
+    (window as any).__APP__ = { user };
+  }
 
   // window.__APP__.user = {
   //   ...extendUser, 

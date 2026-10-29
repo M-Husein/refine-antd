@@ -1,4 +1,4 @@
-import ky, { KyInstance, Options as KyOptions } from 'ky';
+import ky, { type KyInstance, type Options as KyOptions } from 'ky';
 import type { Services, InitOptions, BackendModule } from 'i18next';
 import { retryOnServerErrors } from '@/providers/dataProvider';
 import { getCurrentLang } from '@/utils/browser';
@@ -14,34 +14,34 @@ export class i18nBackend implements BackendModule<i18nBackendOptions> {
   type = 'backend' as const;
   options: i18nBackendOptions;
   private kyInstance: KyInstance;
-  private i18nextOptions: InitOptions;
+  // private i18nextOptions: InitOptions | undefined;
   // private defaultLanguage: string;
-  private initialLanguage: string; // 👈 store the initial language
+  private initialLanguage: string; // ???? store the initial language
 
   constructor(
     _services: Services,
     options: i18nBackendOptions = {},
-    i18nextOptions: InitOptions = {}
+    i18nextOptions?: InitOptions
   ) {
     this.options = {
       commonEndpoint: APP.api + "/locales/{{lng}}/common",
       pageEndpoint: APP.api + "/locales/{{lng}}/page/{{ns}}",
       ...options
     };
-    this.i18nextOptions = i18nextOptions;
+    // this.i18nextOptions = i18nextOptions;
     this.kyInstance = ky.extend(this.options.kyOptions || {});
     // this.defaultLanguage = APP.defaultLang;
     // Store the language used at initialization
-    this.initialLanguage = i18nextOptions.lng || getCurrentLang() || APP.defaultLang;
+    this.initialLanguage = (i18nextOptions as any)?.lng || getCurrentLang() || APP.defaultLang;
   }
 
   init(
     _services: Services,
     options: i18nBackendOptions,
-    i18nextOptions: InitOptions
+    _i18nextOptions?: InitOptions
   ): void {
     this.options = { ...this.options, ...options };
-    this.i18nextOptions = i18nextOptions;
+    // this.i18nextOptions = _i18nextOptions as InitOptions;
 
     // // Update initial language in case it changes (shouldn't, but safe)
     // if (i18nextOptions.lng) {
