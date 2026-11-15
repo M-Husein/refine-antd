@@ -7,7 +7,7 @@ export default function Page(){
   useDocumentTitle("Home");
 
   return (
-    <div className="py-4 px-2 xl_max-w-screen-xl mx-auto">
+    <div className="py-4 px-2 max-w-screen-xl mx-auto">
       <Card 
         title="Home"
         className="shadow"

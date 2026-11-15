@@ -49,6 +49,11 @@ export const RESOURCES: any[] = [
     meta: { parent: "components", label: "Placeholder", icon: <FaCode /> },
   },
   {
+    name: "file-picker",
+    list: "/docs/components/file-picker",
+    meta: { parent: "components", label: "FilePicker", icon: <FaCode /> },
+  },
+  {
     name: "image-editor",
     list: "/docs/components/image-editor",
     meta: { parent: "components", label: "ImageEditor", icon: <FaCode /> },

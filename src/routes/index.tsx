@@ -146,8 +146,12 @@ export const routes: any[] = [
             path: "image-editor", 
             element: lazyComponent(lazy(() => import('@/pages/docs/components/image-editor/Page'))) 
           },
-          { 
-            path: "icon-picker", 
+          {
+            path: "file-picker",
+            element: lazyComponent(lazy(() => import('@/pages/docs/components/file-picker/Page')))
+          },
+          {
+            path: "icon-picker",
             element: lazyComponent(lazy(() => import('@/pages/docs/components/icon-picker/Page'))) 
           },
         ]

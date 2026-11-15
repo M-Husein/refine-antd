@@ -48,9 +48,9 @@ body {
   font-size: 1rem;
 }
 
-[hidden]{
+/* [hidden]{
   display: none !important;
-}
+} */
 
 /* html.dark {
   color-scheme: dark;

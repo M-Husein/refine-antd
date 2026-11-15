@@ -11,7 +11,9 @@ export interface i18nBackendOptions {
 
 export class i18nBackend implements BackendModule<i18nBackendOptions> {
   static type = 'backend' as const;
+  static callbackApi = true;
   type = 'backend' as const;
+  callbackApi = true;
   options: i18nBackendOptions;
   private kyInstance: KyInstance;
   // private i18nextOptions: InitOptions | undefined;

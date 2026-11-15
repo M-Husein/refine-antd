@@ -8,7 +8,7 @@ export default function Page(){
   useDocumentTitle("<IconPicker />");
 
   return (
-    <div className="xl_max-w-screen-xl mx-auto">
+    <div className="max-w-screen-xl mx-auto">
       <h1 className="h4 mb-4">{"<IconPicker />"}</h1>
 
       <div className="space-y-4">

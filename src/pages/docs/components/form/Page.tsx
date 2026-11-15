@@ -17,7 +17,7 @@ export default function Page(){
   };
 
   return (
-    <div className="xl_max-w-screen-xl mx-auto">
+    <div className="max-w-screen-xl mx-auto">
       <h1 className="h4 mb-4">{"<Form />"}</h1>
 
       <Form
