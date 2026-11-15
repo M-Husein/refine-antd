@@ -83,11 +83,16 @@ Hal yang perlu diperhatikan:
 ### `maxBytes`
 Dicek di dalam `beforeUpload`. `beforeUpload` milik Anda tetap dipanggil setelahnya (dengan file yang mungkin sudah diganti namanya), sehingga validasi tambahan tetap bisa dilakukan. Kembalikan `Upload.LIST_IGNORE` untuk menolak file.
 
+Rename `pasted-<timestamp>` berlaku untuk file bernama `image.png`/`image.jpg`/... selama `pastable` aktif. Jika `beforeUpload` Anda mengembalikan `false` (tanpa upload), antd memakai file aslinya, sehingga rename tidak berlaku.
+
 ### Webcam & screen capture
 - Tombol hanya muncul jika `window.isSecureContext` (HTTPS atau `localhost`) dan `navigator.mediaDevices.getUserMedia` / `getDisplayMedia` tersedia.
 - Modal menampilkan pratinjau langsung. Tekan **Ambil** (Capture), lalu **Gunakan** (Use) atau **Ulangi** (Retake).
 - Hasilnya adalah `File` (`webcam-<timestamp>.png` / `screen-<timestamp>.png`) yang melewati alur antd seperti biasa (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`), sama seperti file yang dipilih dari disk.
-- Stream media selalu dimatikan saat modal ditutup, sehingga indikator kamera/layar mati.
+- Pratinjau webcam ter-mirror (tampilan selfie) dan foto yang disimpan juga ter-mirror, sehingga sama dengan yang terlihat. Screen capture tidak pernah di-mirror.
+- File hasil capture dicek terhadap `accept` sebelum masuk ke alur antd. Jika tidak cocok, error ditampilkan dan tidak ada yang ditambahkan.
+- Jika izin ditolak (webcam) atau perangkat tidak bisa dibuka, pesan error ditampilkan dan modal ditutup. Membatalkan dialog pilih layar menutup modal tanpa pesan.
+- Stream media selalu dimatikan saat modal ditutup (termasuk saat ditutup ketika browser masih meminta izin), sehingga indikator kamera/layar mati.
 
 ### Slot tambahan
 
@@ -103,5 +108,31 @@ Memakai `useTranslate` dari refine dengan default Bahasa Inggris. Key:
 
 ## Catatan
 
-- Komponen memakai `App.useApp()` untuk pesan, jadi harus dirender di dalam antd `<App>`.
-- Belum termasuk: paste URL (fetch dari tautan), integrasi File Manager dan Google Drive.
+- Belum diimplementasikan: lihat [Fitur mendatang](#fitur-mendatang).
+
+## Fitur mendatang
+
+> Rencana / opsional. **Belum diimplementasikan**, jadi API di bawah masih bisa berubah.
+
+### `pasteUrl` (tambah file dari URL)
+
+Pengguna bisa menambah file dengan mengetik atau mem-paste tautan. File di-fetch di browser, diubah menjadi `File`, lalu melewati alur antd yang sama seperti sumber lain (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
+
+Usulan API:
+
+```ts
+pasteUrl?: boolean;                                                // tampilkan tombol "From URL"
+fetchUrl?: (url: string, signal: AbortSignal) => Promise<Blob>;    // fetch kustom, mis. lewat proxy backend
+urlTimeout?: number;                                               // default 15000 ms
+```
+
+Catatan desain:
+- **Pemicu:** tombol "From URL" yang membuka popover/modal berisi input. Listener `paste` global untuk teks bersifat opsional (fase 2) dan butuh guard `document.activeElement` (`input`, `textarea`, `select`, `contenteditable`), karena paste teks ke input adalah hal biasa. Paste file (`pastable`) tidak butuh guard ini.
+- **Alur:** validasi URL (hanya `http:`/`https:`) → `fetch` dengan `AbortController` + timeout → cek `res.ok` → cek `Content-Length` / `blob.size` terhadap `maxBytes` → cek `blob.type` terhadap `accept` (fallback: ekstensi URL) → tentukan nama file (`Content-Disposition`, path URL, atau `url-<timestamp>.<ext>`) → tambahkan sebagai `File`.
+- **CORS:** `fetch` lintas origin gagal jika server tidak mengirim `Access-Control-Allow-Origin`, dan `no-cors` menghasilkan respons opaque yang tidak bisa dibaca. Gunakan `fetchUrl` untuk lewat proxy backend.
+- **Keamanan:** jika proxy di server ditambahkan, batasi skema, blokir IP privat/localhost (SSRF), dan batasi ukuran serta timeout di server. Jangan pernah merender konten hasil fetch sebagai HTML.
+- **Error yang perlu ditangani:** URL tidak valid, protokol tidak didukung, gagal CORS/jaringan, HTTP 4xx/5xx, timeout, tipe tidak diterima, file terlalu besar, dibatalkan.
+
+### Ide lain
+- Integrasi File Manager lewat `renderExtra`.
+- Integrasi Google Drive lewat `renderExtra`.

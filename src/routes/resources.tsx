@@ -24,9 +24,9 @@ export const RESOURCES: any[] = [
     meta: { parent: "components", label: "A", icon: <FaCode /> },
   },
   {
-    name: "img",
-    list: "/docs/components/img",
-    meta: { parent: "components", label: "Img", icon: <FaCode /> },
+    name: "avatar",
+    list: "/docs/components/avatar",
+    meta: { parent: "components", label: "Avatar", icon: <FaCode /> },
   },
   {
     name: "form",
@@ -34,24 +34,14 @@ export const RESOURCES: any[] = [
     meta: { parent: "components", label: "Form", icon: <FaCode /> },
   },
   {
+    name: "img",
+    list: "/docs/components/img",
+    meta: { parent: "components", label: "Img", icon: <FaCode /> },
+  },
+  {
     name: "input-color",
     list: "/docs/components/input-color",
     meta: { parent: "components", label: "InputColor", icon: <FaCode /> },
-  },
-  {
-    name: "avatar",
-    list: "/docs/components/avatar",
-    meta: { parent: "components", label: "Avatar", icon: <FaCode /> },
-  },
-  {
-    name: "placeholder",
-    list: "/docs/components/placeholder",
-    meta: { parent: "components", label: "Placeholder", icon: <FaCode /> },
-  },
-  {
-    name: "file-picker",
-    list: "/docs/components/file-picker",
-    meta: { parent: "components", label: "FilePicker", icon: <FaCode /> },
   },
   {
     name: "image-editor",
@@ -59,9 +49,29 @@ export const RESOURCES: any[] = [
     meta: { parent: "components", label: "ImageEditor", icon: <FaCode /> },
   },
   {
+    name: "file-picker",
+    list: "/docs/components/file-picker",
+    meta: { parent: "components", label: "FilePicker", icon: <FaCode /> },
+  },
+  {
+    name: "rich-text-editor",
+    list: "/docs/components/rich-text-editor",
+    meta: { parent: "components", label: "RichText Editor", icon: <FaCode /> },
+  },
+  {
+    name: "rich-text-viewer",
+    list: "/docs/components/rich-text-viewer",
+    meta: { parent: "components", label: "RichText Viewer", icon: <FaCode /> },
+  },
+  {
     name: "icon-picker",
     list: "/docs/components/icon-picker",
     meta: { parent: "components", label: "IconPicker", icon: <FaCode /> },
+  },
+  {
+    name: "placeholder",
+    list: "/docs/components/placeholder",
+    meta: { parent: "components", label: "Placeholder", icon: <FaCode /> },
   },
   {
     name: "theme-editor",

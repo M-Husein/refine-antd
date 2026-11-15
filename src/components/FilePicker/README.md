@@ -83,11 +83,16 @@ Things to keep in mind:
 ### `maxBytes`
 Checked inside `beforeUpload`. Your own `beforeUpload` is still called afterwards (with the possibly renamed file), so you can add further validation. Return `Upload.LIST_IGNORE` to reject a file.
 
+The `pasted-<timestamp>` rename applies to any file named `image.png`/`image.jpg`/... while `pastable` is on. If your `beforeUpload` returns `false` (no upload), antd keeps the original file, so the rename is not applied.
+
 ### Webcam & screen capture
 - Buttons appear only when `window.isSecureContext` (HTTPS or `localhost`) and `navigator.mediaDevices.getUserMedia` / `getDisplayMedia` exist.
 - A modal shows the live preview. Press **Capture**, then **Use** or **Retake**.
 - The result is a `File` (`webcam-<timestamp>.png` / `screen-<timestamp>.png`) that goes through the normal antd pipeline (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`), exactly like a file picked from disk.
-- The media stream is always stopped when the modal closes, so the camera/screen indicator turns off.
+- The webcam preview is mirrored (selfie view) and the saved photo is mirrored too, so it matches what you saw. Screen capture is never mirrored.
+- The captured file is checked against `accept` before it enters the pipeline. If it does not match, an error is shown and nothing is added.
+- If permission is denied (webcam) or the device cannot be opened, an error message is shown and the modal closes. Cancelling the screen picker closes the modal silently.
+- The media stream is always stopped when the modal closes (including when it is closed while the browser is still asking for permission), so the camera/screen indicator turns off.
 
 ### Extra slot
 
@@ -103,5 +108,31 @@ Uses refine's `useTranslate` with English defaults. Keys:
 
 ## Notes
 
-- The component uses `App.useApp()` for messages, so it must be rendered inside antd `<App>`.
-- Out of scope for now: paste URL (fetch from a link), File Manager and Google Drive integrations.
+- Not implemented yet: see [Future features](#future-features).
+
+## Future features
+
+> Planned / optional. **Not implemented**, so the API below may change.
+
+### `pasteUrl` (add a file from a URL)
+
+Let users add a file by entering or pasting a link. The file is fetched in the browser, converted to a `File`, and goes through the same antd pipeline as every other source (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
+
+Proposed API:
+
+```ts
+pasteUrl?: boolean;                                                // show a "From URL" button
+fetchUrl?: (url: string, signal: AbortSignal) => Promise<Blob>;    // custom fetch, e.g. via a backend proxy
+urlTimeout?: number;                                               // default 15000 ms
+```
+
+Design notes:
+- **Trigger:** a "From URL" button that opens a popover/modal with an input. A global text `paste` listener is optional (phase 2) and would need an `document.activeElement` guard (`input`, `textarea`, `select`, `contenteditable`), because pasting text into inputs is normal. File paste (`pastable`) does not need this guard.
+- **Flow:** validate URL (`http:`/`https:` only) → `fetch` with `AbortController` + timeout → check `res.ok` → check `Content-Length` / `blob.size` against `maxBytes` → check `blob.type` against `accept` (fallback: URL extension) → build file name (`Content-Disposition`, URL path, or `url-<timestamp>.<ext>`) → add as `File`.
+- **CORS:** cross-origin `fetch` fails when the server does not send `Access-Control-Allow-Origin`, and `no-cors` returns an unreadable opaque response. Use `fetchUrl` to go through a backend proxy.
+- **Security:** if a server-side proxy is added, restrict schemes, block private/localhost IPs (SSRF), and limit size and timeout on the server. Never render fetched content as HTML.
+- **Errors to handle:** invalid URL, unsupported protocol, CORS/network failure, HTTP 4xx/5xx, timeout, type not accepted, file too large, cancelled.
+
+### Other ideas
+- File Manager integration via `renderExtra`.
+- Google Drive integration via `renderExtra`.
