@@ -5,6 +5,7 @@ A thin wrapper around antd [`Upload.Dragger`](https://ant.design/components/uplo
 - `maxBytes` – per-file size limit
 - `webcam` – take a photo with the camera
 - `screenCapture` – capture a screenshot of a screen/window/tab
+- `pasteUrl` – add a file from a link ("From URL" button)
 - `renderExtra` – slot for future buttons (File Manager, Google Drive, ...)
 - Pasted screenshots are renamed to `pasted-<timestamp>.png` instead of the generic `image.png`
 
@@ -23,9 +24,12 @@ import { FilePicker } from '@/components/FilePicker';
   pastable
   webcam
   screenCapture
+  pasteUrl
   onChange={({ fileList }) => setFiles(fileList)}
 />
 ```
+
+Live demo: `/docs/components/file-picker` ([source](../../pages/docs/components/file-picker/Page.tsx)).
 
 Inside a form (uploading is controlled by antd, so use `valuePropName`/`getValueFromEvent`):
 
@@ -48,6 +52,9 @@ Inside a form (uploading is controlled by antd, so use `valuePropName`/`getValue
 | `maxBytes`      | `number`               | Max size per file in bytes. Larger files are rejected with an error message and not added to the list. |
 | `webcam`        | `boolean`              | Show the "Take a photo" button. Auto-hidden if unsupported.                                           |
 | `screenCapture` | `boolean`              | Show the "Capture screen" button. Auto-hidden if unsupported.                                         |
+| `pasteUrl`      | `boolean`              | Show the "From URL" button: add a file by entering a link.                                            |
+| `fetchUrl`      | `(url, signal) => Promise<Blob>` | Custom fetch for `pasteUrl`, e.g. through a backend proxy to get around CORS.               |
+| `urlTimeout`    | `number`               | Timeout of the URL fetch in ms. Default `15000`.                                                      |
 | `renderExtra`   | `() => ReactNode`      | Rendered next to the capture buttons.                                                                 |
 | `hint`          | `ReactNode`            | Text under the main text of the drop area. Defaults to the max size when `maxBytes` is set.           |
 | `children`      | `ReactNode`            | Replaces the default content of the drop area.                                                        |
@@ -94,6 +101,29 @@ The `pasted-<timestamp>` rename applies to any file named `image.png`/`image.jpg
 - If permission is denied (webcam) or the device cannot be opened, an error message is shown and the modal closes. Cancelling the screen picker closes the modal silently.
 - The media stream is always stopped when the modal closes (including when it is closed while the browser is still asking for permission), so the camera/screen indicator turns off.
 
+### From URL (`pasteUrl`)
+- The **From URL** button opens a modal with an input. Press **Enter** or **Add** to fetch the link. **Cancel**/close aborts a running request.
+- Flow: validate the URL (`http:`/`https:` only) → `fetch` with timeout (`urlTimeout`) → check `res.ok` → check `Content-Length` and the real size against `maxBytes` → check the type against `accept` → add as a `File`. It then goes through the normal antd pipeline (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
+- File name: `Content-Disposition` header, else the last path segment of the URL, else `url-<timestamp>.<ext>`.
+- File type: the response `Content-Type`. When the server sends none (or `application/octet-stream`), it is guessed from the file extension.
+- Errors are shown inline in the modal: invalid URL, unsupported protocol, HTTP error (with status), timeout, type not accepted, too large, and network/CORS failure.
+- **CORS:** a cross-origin `fetch` only works when the server sends `Access-Control-Allow-Origin`. Otherwise the browser blocks reading the response and you get the "network/CORS" error. To support any link, pass `fetchUrl` and go through your own backend:
+
+```tsx
+<FilePicker
+  pasteUrl
+  fetchUrl={async (url, signal) => {
+    const res = await fetch(`/api/fetch-file?url=${encodeURIComponent(url)}`, { signal });
+    if (!res.ok) throw new Error('proxy failed');
+    return res.blob();
+  }}
+/>
+```
+
+If you add such a proxy, restrict schemes, block private/localhost IPs (SSRF), and limit size and timeout on the server.
+
+An `http://` link cannot be fetched from an `https://` page (mixed content) and shows the same network error.
+
 ### Extra slot
 
 ```tsx
@@ -106,32 +136,22 @@ Uses refine's `useTranslate` with English defaults. Keys:
 
 `filePicker.text`, `filePicker.orPaste`, `filePicker.maxSize` (`{{max}}`), `filePicker.tooLarge` (`{{name}}`, `{{max}}`), `filePicker.notAccepted`, `filePicker.webcam`, `filePicker.screenCapture`, `filePicker.capture`, `filePicker.retake`, `filePicker.use`, `filePicker.captureFailed`, `filePicker.permissionDenied`, `buttons.cancel`.
 
+From URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`, `filePicker.urlInvalid`, `filePicker.urlProtocol`, `filePicker.urlHttp` (`{{status}}`), `filePicker.urlTimeout`, `filePicker.urlTooLarge` (`{{max}}`), `filePicker.urlTooLargeNoMax`, `filePicker.urlNetwork`.
+
 ## Notes
 
+- `disabled` turns off the drop area, `pastable`, and every button (Take a photo, Capture screen, From URL).
+- `<timestamp>` in generated file names is an ISO date with `:` and `.` replaced by `-`, e.g. `webcam-2026-11-16T10-20-30-123Z.png`.
+- Error and info messages use antd `message` (via `message.useMessage()`), so the component does not need to be inside antd `<App>`.
 - Not implemented yet: see [Future features](#future-features).
 
 ## Future features
 
 > Planned / optional. **Not implemented**, so the API below may change.
 
-### `pasteUrl` (add a file from a URL)
+### Global paste of URLs (phase 2 of `pasteUrl`)
 
-Let users add a file by entering or pasting a link. The file is fetched in the browser, converted to a `File`, and goes through the same antd pipeline as every other source (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
-
-Proposed API:
-
-```ts
-pasteUrl?: boolean;                                                // show a "From URL" button
-fetchUrl?: (url: string, signal: AbortSignal) => Promise<Blob>;    // custom fetch, e.g. via a backend proxy
-urlTimeout?: number;                                               // default 15000 ms
-```
-
-Design notes:
-- **Trigger:** a "From URL" button that opens a popover/modal with an input. A global text `paste` listener is optional (phase 2) and would need an `document.activeElement` guard (`input`, `textarea`, `select`, `contenteditable`), because pasting text into inputs is normal. File paste (`pastable`) does not need this guard.
-- **Flow:** validate URL (`http:`/`https:` only) → `fetch` with `AbortController` + timeout → check `res.ok` → check `Content-Length` / `blob.size` against `maxBytes` → check `blob.type` against `accept` (fallback: URL extension) → build file name (`Content-Disposition`, URL path, or `url-<timestamp>.<ext>`) → add as `File`.
-- **CORS:** cross-origin `fetch` fails when the server does not send `Access-Control-Allow-Origin`, and `no-cors` returns an unreadable opaque response. Use `fetchUrl` to go through a backend proxy.
-- **Security:** if a server-side proxy is added, restrict schemes, block private/localhost IPs (SSRF), and limit size and timeout on the server. Never render fetched content as HTML.
-- **Errors to handle:** invalid URL, unsupported protocol, CORS/network failure, HTTP 4xx/5xx, timeout, type not accepted, file too large, cancelled.
+`pasteUrl` currently works only through the "From URL" button. A global text `paste` listener (paste a link anywhere on the page) is **not implemented**. It would need a `document.activeElement` guard (`input`, `textarea`, `select`, `contenteditable`), because pasting text into inputs is normal, unlike file paste (`pastable`), which only calls `preventDefault()` when the clipboard contains files. Only one FilePicker per page should react to it.
 
 ### Other ideas
 - File Manager integration via `renderExtra`.

@@ -5,6 +5,7 @@ Pembungkus tipis untuk antd [`Upload.Dragger`](https://ant.design/components/upl
 - `maxBytes` – batas ukuran per file
 - `webcam` – ambil foto dengan kamera
 - `screenCapture` – tangkap layar / jendela / tab
+- `pasteUrl` – tambah file dari tautan (tombol "From URL")
 - `renderExtra` – slot untuk tombol masa depan (File Manager, Google Drive, ...)
 - Screenshot hasil paste diberi nama `pasted-<timestamp>.png`, bukan `image.png` yang generik
 
@@ -23,9 +24,12 @@ import { FilePicker } from '@/components/FilePicker';
   pastable
   webcam
   screenCapture
+  pasteUrl
   onChange={({ fileList }) => setFiles(fileList)}
 />
 ```
+
+Demo langsung: `/docs/components/file-picker` ([source](../../pages/docs/components/file-picker/Page.tsx)).
 
 Di dalam form (upload dikontrol antd, jadi gunakan `valuePropName`/`getValueFromEvent`):
 
@@ -48,6 +52,9 @@ Di dalam form (upload dikontrol antd, jadi gunakan `valuePropName`/`getValueFrom
 | `maxBytes`      | `number`               | Ukuran maksimal per file (bytes). File yang lebih besar ditolak dengan pesan error dan tidak masuk list. |
 | `webcam`        | `boolean`              | Tampilkan tombol "Ambil foto". Otomatis tersembunyi jika tidak didukung.                                |
 | `screenCapture` | `boolean`              | Tampilkan tombol "Tangkap layar". Otomatis tersembunyi jika tidak didukung.                             |
+| `pasteUrl`      | `boolean`              | Tampilkan tombol "From URL": tambah file dengan memasukkan tautan.                                      |
+| `fetchUrl`      | `(url, signal) => Promise<Blob>` | Fetch kustom untuk `pasteUrl`, mis. lewat proxy backend untuk mengatasi CORS.                 |
+| `urlTimeout`    | `number`               | Timeout fetch URL dalam ms. Default `15000`.                                                            |
 | `renderExtra`   | `() => ReactNode`      | Dirender di samping tombol capture.                                                                     |
 | `hint`          | `ReactNode`            | Teks di bawah teks utama area drop. Default-nya ukuran maksimal jika `maxBytes` diisi.                  |
 | `children`      | `ReactNode`            | Mengganti isi default area drop.                                                                        |
@@ -94,6 +101,29 @@ Rename `pasted-<timestamp>` berlaku untuk file bernama `image.png`/`image.jpg`/.
 - Jika izin ditolak (webcam) atau perangkat tidak bisa dibuka, pesan error ditampilkan dan modal ditutup. Membatalkan dialog pilih layar menutup modal tanpa pesan.
 - Stream media selalu dimatikan saat modal ditutup (termasuk saat ditutup ketika browser masih meminta izin), sehingga indikator kamera/layar mati.
 
+### Dari URL (`pasteUrl`)
+- Tombol **From URL** membuka modal berisi input. Tekan **Enter** atau **Add** untuk mengambil tautan. **Cancel**/tutup modal membatalkan request yang sedang berjalan.
+- Alur: validasi URL (hanya `http:`/`https:`) → `fetch` dengan timeout (`urlTimeout`) → cek `res.ok` → cek `Content-Length` dan ukuran sebenarnya terhadap `maxBytes` → cek tipe terhadap `accept` → ditambahkan sebagai `File`. Setelah itu melewati alur antd seperti biasa (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
+- Nama file: header `Content-Disposition`, jika tidak ada maka segmen terakhir path URL, jika tidak ada maka `url-<timestamp>.<ext>`.
+- Tipe file: `Content-Type` dari respons. Jika server tidak mengirimnya (atau `application/octet-stream`), tipe ditebak dari ekstensi file.
+- Error ditampilkan di dalam modal: URL tidak valid, protokol tidak didukung, error HTTP (dengan status), timeout, tipe tidak diterima, terlalu besar, dan kegagalan jaringan/CORS.
+- **CORS:** `fetch` lintas origin hanya berhasil jika server mengirim `Access-Control-Allow-Origin`. Jika tidak, browser memblokir pembacaan respons dan muncul error "jaringan/CORS". Agar semua tautan bisa dipakai, berikan `fetchUrl` dan lewatkan lewat backend Anda:
+
+```tsx
+<FilePicker
+  pasteUrl
+  fetchUrl={async (url, signal) => {
+    const res = await fetch(`/api/fetch-file?url=${encodeURIComponent(url)}`, { signal });
+    if (!res.ok) throw new Error('proxy failed');
+    return res.blob();
+  }}
+/>
+```
+
+Jika Anda membuat proxy seperti itu, batasi skema, blokir IP privat/localhost (SSRF), dan batasi ukuran serta timeout di server.
+
+Tautan `http://` tidak bisa di-fetch dari halaman `https://` (mixed content) dan menampilkan error jaringan yang sama.
+
 ### Slot tambahan
 
 ```tsx
@@ -106,32 +136,22 @@ Memakai `useTranslate` dari refine dengan default Bahasa Inggris. Key:
 
 `filePicker.text`, `filePicker.orPaste`, `filePicker.maxSize` (`{{max}}`), `filePicker.tooLarge` (`{{name}}`, `{{max}}`), `filePicker.notAccepted`, `filePicker.webcam`, `filePicker.screenCapture`, `filePicker.capture`, `filePicker.retake`, `filePicker.use`, `filePicker.captureFailed`, `filePicker.permissionDenied`, `buttons.cancel`.
 
+Dari URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`, `filePicker.urlInvalid`, `filePicker.urlProtocol`, `filePicker.urlHttp` (`{{status}}`), `filePicker.urlTimeout`, `filePicker.urlTooLarge` (`{{max}}`), `filePicker.urlTooLargeNoMax`, `filePicker.urlNetwork`.
+
 ## Catatan
 
+- `disabled` menonaktifkan area drop, `pastable`, dan semua tombol (Take a photo, Capture screen, From URL).
+- `<timestamp>` pada nama file hasil generate adalah tanggal ISO dengan `:` dan `.` diganti `-`, mis. `webcam-2026-11-16T10-20-30-123Z.png`.
+- Pesan error dan info memakai antd `message` (lewat `message.useMessage()`), jadi komponen tidak perlu berada di dalam antd `<App>`.
 - Belum diimplementasikan: lihat [Fitur mendatang](#fitur-mendatang).
 
 ## Fitur mendatang
 
 > Rencana / opsional. **Belum diimplementasikan**, jadi API di bawah masih bisa berubah.
 
-### `pasteUrl` (tambah file dari URL)
+### Paste URL global (fase 2 dari `pasteUrl`)
 
-Pengguna bisa menambah file dengan mengetik atau mem-paste tautan. File di-fetch di browser, diubah menjadi `File`, lalu melewati alur antd yang sama seperti sumber lain (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
-
-Usulan API:
-
-```ts
-pasteUrl?: boolean;                                                // tampilkan tombol "From URL"
-fetchUrl?: (url: string, signal: AbortSignal) => Promise<Blob>;    // fetch kustom, mis. lewat proxy backend
-urlTimeout?: number;                                               // default 15000 ms
-```
-
-Catatan desain:
-- **Pemicu:** tombol "From URL" yang membuka popover/modal berisi input. Listener `paste` global untuk teks bersifat opsional (fase 2) dan butuh guard `document.activeElement` (`input`, `textarea`, `select`, `contenteditable`), karena paste teks ke input adalah hal biasa. Paste file (`pastable`) tidak butuh guard ini.
-- **Alur:** validasi URL (hanya `http:`/`https:`) → `fetch` dengan `AbortController` + timeout → cek `res.ok` → cek `Content-Length` / `blob.size` terhadap `maxBytes` → cek `blob.type` terhadap `accept` (fallback: ekstensi URL) → tentukan nama file (`Content-Disposition`, path URL, atau `url-<timestamp>.<ext>`) → tambahkan sebagai `File`.
-- **CORS:** `fetch` lintas origin gagal jika server tidak mengirim `Access-Control-Allow-Origin`, dan `no-cors` menghasilkan respons opaque yang tidak bisa dibaca. Gunakan `fetchUrl` untuk lewat proxy backend.
-- **Keamanan:** jika proxy di server ditambahkan, batasi skema, blokir IP privat/localhost (SSRF), dan batasi ukuran serta timeout di server. Jangan pernah merender konten hasil fetch sebagai HTML.
-- **Error yang perlu ditangani:** URL tidak valid, protokol tidak didukung, gagal CORS/jaringan, HTTP 4xx/5xx, timeout, tipe tidak diterima, file terlalu besar, dibatalkan.
+`pasteUrl` saat ini hanya bekerja lewat tombol "From URL". Listener `paste` teks global (paste tautan di mana saja di halaman) **belum diimplementasikan**. Fitur itu butuh guard `document.activeElement` (`input`, `textarea`, `select`, `contenteditable`), karena paste teks ke input adalah hal biasa, berbeda dengan paste file (`pastable`) yang hanya memanggil `preventDefault()` jika clipboard berisi file. Hanya satu FilePicker per halaman yang boleh merespons.
 
 ### Ide lain
 - Integrasi File Manager lewat `renderExtra`.

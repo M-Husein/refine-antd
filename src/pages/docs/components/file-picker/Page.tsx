@@ -11,6 +11,7 @@ export default function Page() {
   const [pastable, setPastable] = useState(true);
   const [webcam, setWebcam] = useState(true);
   const [screenCapture, setScreenCapture] = useState(true);
+  const [pasteUrl, setPasteUrl] = useState(true);
   const [disabled, setDisabled] = useState(false);
 
   return (
@@ -29,11 +30,15 @@ export default function Page() {
             <Switch checked={screenCapture} onChange={setScreenCapture} /> screenCapture
           </label>
           <label className="flex items-center gap-2">
+            <Switch checked={pasteUrl} onChange={setPasteUrl} /> pasteUrl
+          </label>
+          <label className="flex items-center gap-2">
             <Switch checked={disabled} onChange={setDisabled} /> disabled
           </label>
         </div>
         <Typography.Text type="secondary" className="block mt-2">
-          Webcam and screen capture only work on HTTPS or localhost.
+          Webcam and screen capture only work on HTTPS or localhost. From URL only works for links whose
+          server allows CORS (e.g. https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png).
         </Typography.Text>
       </Card>
 
@@ -45,6 +50,7 @@ export default function Page() {
         pastable={pastable}
         webcam={webcam}
         screenCapture={screenCapture}
+        pasteUrl={pasteUrl}
         disabled={disabled}
         listType="picture"
         // Do not upload anywhere, keep the files in state only
