@@ -49,7 +49,13 @@ const Toolbar = () => (
     </Space.Compact>
     <Link />
     <TableControl />
-    <ImageControl />
+    <ImageControl 
+      pastable 
+      pasteUrl 
+      webcam 
+      screenCapture
+      // multiple 
+    />
     <VideoControl />
     <AudioControl />
     <EmbedControl providers={["youtube", "vimeo"]} />

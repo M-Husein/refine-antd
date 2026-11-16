@@ -25,16 +25,16 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
   const [open, setOpen] = useState(false);
 
   const overlay = selected ? (
-    <div
-      style={{
-        position: "absolute",
-        top: 4,
-        right: 4,
-        background: "rgba(255,255,255,0.9)",
-        borderRadius: 6,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-      }}
-    >
+    // <div
+    //   style={{
+    //     position: "absolute",
+    //     top: 4,
+    //     right: 4,
+    //     background: "rgba(255,255,255,0.9)",
+    //     borderRadius: 6,
+    //     boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+    //   }}
+    // >
       <Popover
         trigger="click"
         open={open}
@@ -43,12 +43,12 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
           <Space orientation="vertical" style={{ width: 260 }}>
             <Space.Compact>
               <Button
-                type={align === "left" ? "primary" : "default"}
+                type={(align ?? "left") === "left" ? "primary" : "default"}
                 icon={<AlignLeftOutlined />}
                 onClick={() => updateAttributes({ align: "left" as ImageAlign })}
               />
               <Button
-                type={(align ?? "center") === "center" ? "primary" : "default"}
+                type={align === "center" ? "primary" : "default"}
                 icon={<AlignCenterOutlined />}
                 onClick={() => updateAttributes({ align: "center" as ImageAlign })}
               />
@@ -88,13 +88,21 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
           </Space>
         }
       >
-        <Button size="small">Edit image</Button>
+        <Button 
+          size="small"
+          className="absolute top-1 right-1"
+        >
+          Edit image
+        </Button>
       </Popover>
-    </div>
+    // </div>
   ) : null;
 
   return (
-    <NodeViewWrapper as="span" className={selected ? "rte-image-selected" : undefined}>
+    <NodeViewWrapper 
+      as="span" 
+      className={selected ? "rte-image-selected" : undefined}
+    >
       <ImageFigure
         src={src}
         alt={alt}

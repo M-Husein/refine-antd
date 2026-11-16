@@ -43,7 +43,7 @@ export const ImageFigure = ({
   title,
   caption,
   displayMode = "block",
-  align = "center",
+  align = "left",
   width,
   height,
   editorOverlay,
@@ -64,18 +64,18 @@ export const ImageFigure = ({
       style={floatStyle}
       data-align={align}
     >
-      <span style={{ position: "relative", display: "inline-block" }}>
+      <div className="relative inline-block">
         <img
           src={src}
           alt={alt ?? ""}
           title={title ?? undefined}
           width={width ?? undefined}
           height={height ?? undefined}
-          style={{ maxWidth: "100%", display: "block" }}
+          className="block max-w-full"
         />
         {editorOverlay}
-      </span>
-      {caption ? <figcaption>{caption}</figcaption> : null}
+      </div>
+      {!caption && <figcaption>{caption}</figcaption>}
     </figure>
   );
 };
@@ -97,16 +97,17 @@ export const ImageInlineSpan = ({
   editorOverlay,
   className,
 }: ImageInlineSpanProps) => (
-  <span
-    className={["rte-image-inline", className].filter(Boolean).join(" ")}
-    style={{ position: "relative", display: "inline-block" }}
+  <div // span
+    className={["rte-image-inline relative inline-block", className].filter(Boolean).join(" ")}
+    // style={{ position: "relative", display: "inline-block" }}
   >
     <img
       src={src}
       alt={alt ?? ""}
       width={width ?? undefined}
-      style={{ verticalAlign, maxWidth: "100%" }}
+      className="max-w-full"
+      style={{ verticalAlign }} // , maxWidth: "100%"
     />
     {editorOverlay}
-  </span>
+  </div>
 );

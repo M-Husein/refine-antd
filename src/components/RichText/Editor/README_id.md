@@ -58,6 +58,31 @@ Di dalam form (`value`/`onChange` disuntikkan oleh `Form.Item`):
 
 Control membutuhkan extension yang sesuai, mis. `ImageControl` butuh extension image dari `createEditorExtensions()`. Di luar `<Editor>` control tidak merender apa pun. `useRichTextEditor()` mengembalikan instance editor Tiptap untuk control buatan sendiri.
 
+### ImageControl
+
+Membuka modal berisi [`FilePicker`](../../FilePicker/README_id.md): pilih, drop, atau paste gambar, atau tambahkan dari URL, kamera, atau layar. Props FilePicker diteruskan langsung, jadi picker dikonfigurasi di control-nya:
+
+```tsx
+<Space>
+  <ImageControl pasteUrl webcam multiple maxBytes={2 * 1024 * 1024} />
+</Space>
+```
+
+| Prop | Deskripsi |
+| --- | --- |
+| Props FilePicker | `pasteUrl`, `webcam`, `screenCapture`, `fetchUrl`, `urlTimeout`, `maxBytes`, `multiple`, `maxCount`, `accept` (default `image/*`), `pastable` (default `true`), `action`, `customRequest`, `beforeUpload`, `onChange`, `listType`, `hint`, `renderExtra`, ... |
+| `getUrl(file)` | Mengubah `UploadFile` yang sudah diunggah menjadi `src` gambar. Default: respons bila berupa string, lalu `response.url` / `response.data.url`, lalu `file.url`. |
+| `modalTitle`, `modalProps` | Judul dan props tambahan antd Modal. |
+| Props Button | `icon`, `size`, `type`, `disabled`, `className`, ... diteruskan ke tombol pemicu. Nama yang sama dengan FilePicker (`disabled`, `className`, `style`, `type`, `children`) tetap bermakna **tombol**; `name` dan `onChange` ke picker. `disabled` berlaku untuk keduanya. |
+
+Asal gambar:
+- **Tanpa `action` / `customRequest`:** gambar disematkan sebagai **data URL** (base64). Sederhana, tetapi konten membesar sekitar 33% dari ukuran file, jadi atur `maxBytes` atau gunakan upload.
+- **`action="/api/upload"`** (atau `customRequest`): file diunggah dan URL dibaca dari respons (`getUrl`).
+
+Perilaku: gambar dalam satu batch disisipkan bersamaan, sesuai urutan pemilihan, setelah tidak ada yang masih diunggah. Gambar disisipkan **setelah** gambar yang sedang terpilih, bukan menggantinya. Modal menutup bila semua berhasil dan tetap terbuka bila ada file gagal supaya error terlihat. `src` berskema `javascript:`, `vbscript:`, atau `data:` non-gambar ditolak.
+
+Membutuhkan konteks Refine (FilePicker memakai `useTranslate`).
+
 ## Berpindah format
 
 `value` dan `format` harus berubah bersamaan (json berupa objek, html/markdown berupa string). Gunakan `convertContent` untuk meng-encode ulang dokumen saat ini dengan schema lengkap:
@@ -83,7 +108,7 @@ Serialisasi Markdown tidak menghilangkan informasi: hal yang tidak bisa diekspre
 
 ## Keterbatasan yang diketahui
 
-- **Belum ada i18n.** Teks UI di-hardcode dalam bahasa Inggris dan belum lewat `useTranslate` (Refine). Terdampak: tooltip dan label control, popover Link/Image/Video/Audio/Embed/Math (label, placeholder, tombol), pemilih ukuran dan toolbar tabel, header code block (`Code language`, `Code theme`, `Copy code`). To do: pindahkan ke file locale.
+- **Belum ada i18n.** Teks UI di-hardcode dalam bahasa Inggris dan belum lewat `useTranslate` (Refine). Terdampak: tooltip dan label control, popover Link/Image/Video/Audio/Embed/Math (label, placeholder, tombol), judul modal ImageControl (`Insert image`; FilePicker di dalamnya sudah bisa diterjemahkan), pemilih ukuran dan toolbar tabel, header code block (`Code language`, `Code theme`, `Copy code`). To do: pindahkan ke file locale.
 - `createEditorExtensions()` (dan `extensions` pada umumnya) harus referensi yang stabil; array baru di setiap render membangun ulang editor.
 - `readOnly` hanya kunci sementara, bukan viewer.
 - Memakai class CSS `rte-*` (`../styles`); `mathlive/static.css` di-import oleh komponen.
