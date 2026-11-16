@@ -58,6 +58,31 @@ Inside a form (`value`/`onChange` are what `Form.Item` injects):
 
 Controls need the matching extension, e.g. `ImageControl` needs the image extension from `createEditorExtensions()`. They render nothing outside `<Editor>`. `useRichTextEditor()` returns the live Tiptap editor for your own controls.
 
+### ImageControl
+
+Opens a modal with a [`FilePicker`](../../FilePicker/README.md): pick, drop or paste an image, or add one from a URL, the camera or the screen. The FilePicker props are passed straight through, so the picker is configured on the control itself:
+
+```tsx
+<Space>
+  <ImageControl pasteUrl webcam multiple maxBytes={2 * 1024 * 1024} />
+</Space>
+```
+
+| Prop | Description |
+| --- | --- |
+| FilePicker props | `pasteUrl`, `webcam`, `screenCapture`, `fetchUrl`, `urlTimeout`, `maxBytes`, `multiple`, `maxCount`, `accept` (default `image/*`), `pastable` (default `true`), `action`, `customRequest`, `beforeUpload`, `onChange`, `listType`, `hint`, `renderExtra`, ... |
+| `getUrl(file)` | Turns an uploaded `UploadFile` into the image `src`. Default: the response when it is a string, else `response.url` / `response.data.url`, else `file.url`. |
+| `modalTitle`, `modalProps` | Title and extra props of the antd Modal. |
+| Button props | `icon`, `size`, `type`, `disabled`, `className`, ... go to the trigger button. A name shared with the FilePicker (`disabled`, `className`, `style`, `type`, `children`) keeps its **button** meaning; `name` and `onChange` go to the picker. `disabled` applies to both. |
+
+Where the image comes from:
+- **No `action` / `customRequest`:** the image is embedded as a **data URL** (base64). Simple, but the content grows by about 33% of the file size, so set `maxBytes` or upload instead.
+- **`action="/api/upload"`** (or `customRequest`): the file is uploaded and the URL is read from the response (`getUrl`).
+
+Behavior: images of one batch are inserted together, in the order they were picked, once nothing is still uploading. An image is inserted **after** a currently selected image instead of replacing it. The modal closes when everything succeeded and stays open if a file failed, so the error remains visible. `src` values using `javascript:`, `vbscript:` or a non-image `data:` are rejected.
+
+Needs the Refine context (the FilePicker uses `useTranslate`).
+
 ## Switching format
 
 `value` and `format` must change together (json is an object, html/markdown are strings). Use `convertContent` to re-encode the current document with the full schema:
@@ -83,7 +108,7 @@ Markdown is serialized without losing information: constructs that Markdown cann
 
 ## Known limitations
 
-- **No i18n yet.** UI texts are hardcoded in English and are not yet routed through `useTranslate` (Refine). Affected: control tooltips and labels, Link/Image/Video/Audio/Embed/Math popovers (labels, placeholders, buttons), table size picker and toolbar, code block header (`Code language`, `Code theme`, `Copy code`). To do: move them to the locale files.
+- **No i18n yet.** UI texts are hardcoded in English and are not yet routed through `useTranslate` (Refine). Affected: control tooltips and labels, Link/Image/Video/Audio/Embed/Math popovers (labels, placeholders, buttons), the ImageControl modal title (`Insert image`; the FilePicker inside is already translatable), table size picker and toolbar, code block header (`Code language`, `Code theme`, `Copy code`). To do: move them to the locale files.
 - `createEditorExtensions()` (and `extensions` in general) must be a stable reference; a new array on each render rebuilds the editor.
 - `readOnly` is a temporary lock, not a viewer.
 - Uses the CSS classes `rte-*` (`../styles`); `mathlive/static.css` is imported by the component.

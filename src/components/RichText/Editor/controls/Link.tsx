@@ -141,6 +141,7 @@ export const Link = forwardRef<HTMLButtonElement, LinkProps>((props, ref) => {
         {...props}
       />
       <Modal
+        style={{ top: 9 }}
         title={hasExistingLink ? "Edit link" : "Insert link"}
         open={open}
         onCancel={() => setOpen(false)}

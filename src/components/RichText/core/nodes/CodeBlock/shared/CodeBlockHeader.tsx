@@ -10,7 +10,7 @@ const ALIASES = new Map(CODE_LANGUAGES.map((l) => [l.id, l.aliases]));
 // A number (not `false`) so antd keeps the virtual list enabled
 // (@rc-component/select disables it for `popupMatchSelectWidth={false}`).
 // 220px is the widest label ("Closure Stylesheets (GSS)") plus padding.
-const LANGUAGE_DROPDOWN_WIDTH = 220;
+const LANGUAGE_DROPDOWN_WIDTH = 195; // 220
 const LANGUAGE_LIST_HEIGHT = 256;
 
 const THEME_OPTIONS: Array<{ value: CodeBlockTheme; label: string }> = [
@@ -97,16 +97,6 @@ export const CodeBlockHeader = ({
           virtual
           listHeight={LANGUAGE_LIST_HEIGHT}
           // popupMatchSelectWidth={false}
-          // filterOption={(input, option) => {
-          //   const q = input.trim().toLowerCase();
-          //   if (!q) return true;
-          //   const o = option as { value: string; label: string };
-          //   return (
-          //     o.label.toLowerCase().includes(q) ||
-          //     o.value.includes(q) ||
-          //     (ALIASES.get(o.value) ?? []).some((a) => a.includes(q))
-          //   );
-          // }}
           showSearch={{
             filterOption: (input, option) => {
               const q = input.trim().toLowerCase();
@@ -136,8 +126,8 @@ export const CodeBlockHeader = ({
         >
           {copied === "ok" 
             ? "Copied" 
-            : copied === "failed" ? 
-              "Copy failed" 
+            : copied === "failed"  
+              ? "Copy failed" 
               : "Copy"
           }
         </Button>

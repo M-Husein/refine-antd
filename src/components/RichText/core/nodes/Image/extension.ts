@@ -127,7 +127,7 @@ export const Image = Node.create({
       title: { default: null, ...noRender },
       caption: { default: null, ...noRender },
       displayMode: { default: "block", ...noRender },
-      align: { default: "center", ...noRender },
+      align: { default: "left", ...noRender },
       width: { default: null, ...noRender },
       height: { default: null, ...noRender },
       responsive: { default: null, ...noRender },
@@ -149,7 +149,7 @@ export const Image = Node.create({
             title: img.getAttribute("title"),
             width: img.getAttribute("width") ? Number(img.getAttribute("width")) : null,
             height: img.getAttribute("height") ? Number(img.getAttribute("height")) : null,
-            align: figure.getAttribute("data-align") ?? "center",
+            align: figure.getAttribute("data-align") ?? "left",
             displayMode: figure.getAttribute("data-display-mode") ?? "block",
             caption: figcaption ? figcaption.textContent : null,
           };
