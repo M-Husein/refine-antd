@@ -88,11 +88,15 @@ export const ResizableTable = ({
         </colgroup>
         {children}
       </table>
-      <div className="rte-table-resize-handles" aria-hidden>
+      <div 
+        className="rte-table-resize-handles" 
+        aria-hidden
+      >
         {boundaries.map((left, i) => (
           <div
             key={i}
-            className="rte-table-resize-handle"
+            tabIndex={-1}
+            className="rte-table-resize-handle block-all"
             style={{ left }}
             onPointerDown={handlePointerDown(i)}
           />

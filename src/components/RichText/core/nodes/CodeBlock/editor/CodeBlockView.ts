@@ -67,11 +67,22 @@ const cmTheme = CMView.theme({
   // an *empty* line, so the caret vanished on every blank line (and on the
   // new line made by Enter). A 2px border paints reliably; `margin-left`
   // keeps it centred on the caret position.
-  ".cm-cursor, .cm-dropCursor": {
+  ".cm-cursor,.cm-dropCursor": {
     borderLeftColor: "var(--rte-code-caret)",
     borderLeftWidth: "2px",
     marginLeft: "-1px",
   },
+  // The second half of that fix. At column 0 (every empty line) the caret
+  // is centred on the gutter's right edge (`.cm-line` has no left padding),
+  // so its left half sits under the gutter. CodeMirror stacks the gutters
+  // (z-index 200) above the cursor layer (150), and the active-line gutter
+  // has an opaque background — so the 2px caret was painted only 1px wide.
+  // On a fractional devicePixelRatio (e.g. Windows at 125%) that remaining
+  // 1px lands between device pixels and is faint or invisible. Raising the
+  // cursor layer above the gutters paints the whole 2px; the caret never
+  // needs to be under a gutter, because CodeMirror scrolls it into view.
+  // `!important`: CodeMirror sets the layer's z-index (150) as an inline style.
+  ".cm-cursorLayer": { zIndex: "250 !important" },
   "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":
     { backgroundColor: "var(--rte-code-selection)" },
   ".cm-gutters": { backgroundColor: "transparent", color: "var(--rte-code-gutter-fg)", border: "none" },

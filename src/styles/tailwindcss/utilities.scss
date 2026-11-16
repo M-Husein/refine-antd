@@ -74,6 +74,15 @@
     content: "";
   }
 
+  /* Prevent selection when resize, iframe block, and cursor change */
+  .block-all:active::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1095;
+    // pointer-events: auto;
+  }
+
   .no-after::after {
     content: none !important;
   }

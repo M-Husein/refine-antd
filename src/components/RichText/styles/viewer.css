@@ -29,6 +29,8 @@
 .rte-table-resize-handles {
   position: absolute;
   inset: 0;
+  /* Calc with table margin-bottom: 0.75em */
+  height: calc(100% - 0.75em);
   pointer-events: none;
 }
 
@@ -44,5 +46,13 @@
 
 .rte-table-resize-handle:hover,
 .rte-table-resize-handle:active {
-  background: rgba(22, 119, 255, 0.35);
+  background: rgba(22, 119, 255, .35);
 }
+
+/* Prevent selection when resize, iframe block, and cursor change */
+/* .rte-table-resize-handle:active::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1095;
+} */
