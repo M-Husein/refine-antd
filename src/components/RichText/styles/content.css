@@ -4,7 +4,7 @@
  * whether it's being edited or viewed. Editor-only chrome (selection,
  * resize handles, NodeView controls) belongs in editor.css instead.
  */
-.rte-content {
+/* .rte-content {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.6;
@@ -24,17 +24,30 @@
   margin: 1.2em 0 0.5em;
   font-weight: 600;
   line-height: 1.3;
-}
+} */
 
 /* Explicit sizes for all six levels so Editor and Viewer agree and h5/h6
    don't fall back to browser defaults (0.83em / 0.67em — smaller than the
    body text they're supposed to be headings for). */
-.rte-content h1 { font-size: 2em; }
-.rte-content h2 { font-size: 1.6em; }
-.rte-content h3 { font-size: 1.35em; }
-.rte-content h4 { font-size: 1.15em; }
-.rte-content h5 { font-size: 1em; }
-.rte-content h6 { font-size: 0.9em; color: rgba(0, 0, 0, 0.65); }
+/* .rte-content h1 {
+  font-size: 2em;
+}
+.rte-content h2 {
+  font-size: 1.6em;
+}
+.rte-content h3 {
+  font-size: 1.35em;
+}
+.rte-content h4 {
+  font-size: 1.15em;
+}
+.rte-content h5 {
+  font-size: 1em;
+}
+.rte-content h6 {
+  font-size: 0.9em;
+  color: rgba(0, 0, 0, 0.65);
+} */
 
 .rte-content blockquote {
   margin: 0 0 0.75em;
@@ -51,14 +64,19 @@
   overflow-x: auto;
 }
 
-.rte-content code {
+/* .rte-content code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.9em;
-}
+} */
 
 .rte-content ul[data-type="taskList"] {
   list-style: none;
-  padding-left: 0.25em;
+  /* padding-left: 0.25em; */
+  padding-left: 0;
+}
+
+.rte-content ul[data-type="taskList"] > * + * {
+  margin-top: .25rem;
 }
 
 .rte-content ul[data-type="taskList"] li {
@@ -75,7 +93,7 @@
 .rte-content .rte-task-item-checkbox {
   display: inline-flex;
   align-items: center;
-  padding-top: 0.2em;
+  /* padding-top: 0.2em; */
 }
 
 .rte-content .rte-task-item-content {
@@ -83,7 +101,8 @@
   min-width: 0;
 }
 
-.rte-content .rte-task-item-content > p {
+/* .rte-content .rte-task-item-content > p  */
+.rte-content .rte-task-item-content p {
   margin: 0;
 }
 
@@ -292,23 +311,9 @@
 }
 
 /* --- header: language Select (or label), theme Select, Copy ------------- */
-.rte-codeblock__header-host {
+/* .rte-codeblock__header-host {
   display: block;
-}
-
-.rte-codeblock__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px 4px;
-}
-
-.rte-codeblock__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+} */
 
 .rte-codeblock__lang {
   padding: 2px 12px;
@@ -318,50 +323,6 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 22px;
-}
-
-.rte-codeblock .rte-codeblock__select {
-  min-width: 120px;
-  font-weight: 600;
-}
-.rte-codeblock .rte-codeblock__select--theme {
-  min-width: 88px;
-}
-.rte-codeblock .rte-codeblock__select.ant-select-filled,
-.rte-codeblock .rte-codeblock__select.ant-select-filled .ant-select-selector {
-  border-radius: 8px;
-  background: var(--rte-code-pill-bg);
-  color: var(--rte-code-pill-fg);
-}
-.rte-codeblock .rte-codeblock__select.ant-select-filled:hover,
-.rte-codeblock .rte-codeblock__select.ant-select-filled:hover .ant-select-selector {
-  background: var(--rte-code-pill-bg);
-  filter: brightness(0.97);
-}
-.rte-codeblock .rte-codeblock__select .ant-select-content,
-.rte-codeblock .rte-codeblock__select .ant-select-input,
-.rte-codeblock .rte-codeblock__select .ant-select-selection-item,
-.rte-codeblock .rte-codeblock__select .ant-select-selection-search-input {
-  color: var(--rte-code-pill-fg);
-}
-.rte-codeblock .rte-codeblock__select .ant-select-suffix,
-.rte-codeblock .rte-codeblock__select .ant-select-arrow {
-  color: var(--rte-code-gutter-fg);
-}
-
-.rte-codeblock .rte-codeblock__copy.ant-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 8px;
-  background: var(--rte-code-copy-bg);
-  color: var(--rte-code-copy-fg);
-  font-weight: 600;
-}
-.rte-codeblock .rte-codeblock__copy.ant-btn:not(:disabled):hover {
-  background: var(--rte-code-copy-bg);
-  color: var(--rte-code-copy-fg);
-  filter: brightness(0.96);
 }
 
 /* --- Viewer: static highlighted lines with CSS line numbers -------------- */
@@ -411,25 +372,54 @@
 .rte-codeblock .tok-keyword,
 .rte-codeblock .tok-atom,
 .rte-codeblock .tok-bool,
-.rte-codeblock .tok-labelName { color: var(--rte-tok-keyword); }
+.rte-codeblock .tok-labelName {
+  color: var(--rte-tok-keyword);
+}
 .rte-codeblock .tok-string,
 .rte-codeblock .tok-string2,
-.rte-codeblock .tok-literal { color: var(--rte-tok-string); }
-.rte-codeblock .tok-number { color: var(--rte-tok-number); }
-.rte-codeblock .tok-comment { color: var(--rte-tok-comment); }
-.rte-codeblock .tok-propertyName { color: var(--rte-tok-property); }
+.rte-codeblock .tok-literal {
+  color: var(--rte-tok-string);
+}
+.rte-codeblock .tok-number {
+  color: var(--rte-tok-number);
+}
+.rte-codeblock .tok-comment {
+  color: var(--rte-tok-comment);
+}
+.rte-codeblock .tok-propertyName {
+  color: var(--rte-tok-property);
+}
 .rte-codeblock .tok-variableName.tok-definition,
-.rte-codeblock .tok-macroName { color: var(--rte-tok-definition); }
+.rte-codeblock .tok-macroName {
+  color: var(--rte-tok-definition);
+}
 .rte-codeblock .tok-typeName,
 .rte-codeblock .tok-className,
-.rte-codeblock .tok-namespace { color: var(--rte-tok-type); }
-.rte-codeblock .tok-operator { color: var(--rte-tok-operator); }
-.rte-codeblock .tok-meta { color: var(--rte-tok-meta); }
+.rte-codeblock .tok-namespace {
+  color: var(--rte-tok-type);
+}
+.rte-codeblock .tok-operator {
+  color: var(--rte-tok-operator);
+}
+.rte-codeblock .tok-meta {
+  color: var(--rte-tok-meta);
+}
 .rte-codeblock .tok-link,
-.rte-codeblock .tok-url { color: var(--rte-tok-link); text-decoration: underline; }
+.rte-codeblock .tok-url {
+  color: var(--rte-tok-link);
+  text-decoration: underline;
+}
 .rte-codeblock .tok-heading,
-.rte-codeblock .tok-strong { font-weight: 700; }
-.rte-codeblock .tok-emphasis { font-style: italic; }
-.rte-codeblock .tok-inserted { color: var(--rte-tok-string); }
+.rte-codeblock .tok-strong {
+  font-weight: 700;
+}
+.rte-codeblock .tok-emphasis {
+  font-style: italic;
+}
+.rte-codeblock .tok-inserted {
+  color: var(--rte-tok-string);
+}
 .rte-codeblock .tok-deleted,
-.rte-codeblock .tok-invalid { color: var(--rte-code-invalid); }
+.rte-codeblock .tok-invalid {
+  color: var(--rte-code-invalid);
+}
