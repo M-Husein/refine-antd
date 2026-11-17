@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Select } from "antd";
+import { Button, Select } from "antd"; // , ConfigProvider, theme as themeAntd
 import { CODE_LANGUAGES, resolveCodeLanguage } from "../languages";
 import type { CodeBlockTheme } from "../types";
-import { copyText } from "./clipboard";
+// import { copyText } from "./clipboard";
+import { copyToClipboard } from "q-js-utils/copyToClipboard";
 
 const LANGUAGE_OPTIONS = CODE_LANGUAGES.map((l) => ({ value: l.id, label: l.label }));
 const ALIASES = new Map(CODE_LANGUAGES.map((l) => [l.id, l.aliases]));
@@ -21,18 +22,18 @@ const THEME_OPTIONS: Array<{ value: CodeBlockTheme; label: string }> = [
 
 // Inline SVG, not @ant-design/icons: this component is shared with the
 // Viewer, whose bundle must not import the icon package (see
-// scripts/check-viewer-bundle.mjs).
-const CopyIcon = () => (
-  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-    <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
-    <path d="M10.5 3.5V3A1.5 1.5 0 0 0 9 1.5H3A1.5 1.5 0 0 0 1.5 3v6A1.5 1.5 0 0 0 3 10.5h.5" />
-  </svg>
-);
-const CheckIcon = () => (
-  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-    <path d="M3 8.5l3.2 3L13 4.5" />
-  </svg>
-);
+// scripts/check-viewer-bundle.mjs).📋
+// const CopyIcon = () => (
+//   <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+//     <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+//     <path d="M10.5 3.5V3A1.5 1.5 0 0 0 9 1.5H3A1.5 1.5 0 0 0 1.5 3v6A1.5 1.5 0 0 0 3 10.5h.5" />
+//   </svg>
+// );
+// const CheckIcon = () => (
+//   <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+//     <path d="M3 8.5l3.2 3L13 4.5" />
+//   </svg>
+// );
 
 export interface CodeBlockHeaderProps {
   /** Stored language string (id, alias, or unknown). */
@@ -65,7 +66,8 @@ export const CodeBlockHeader = ({
 }: CodeBlockHeaderProps) => {
   const resolved = resolveCodeLanguage(language);
   const [copied, setCopied] = useState<"idle" | "ok" | "failed">("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(void 0);
+  
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const languageOptions = useMemo(
@@ -76,19 +78,27 @@ export const CodeBlockHeader = ({
   );
 
   const onCopy = async () => {
-    const ok = await copyText(getCode());
+    const ok = await copyToClipboard(getCode());
     setCopied(ok ? "ok" : "failed");
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied("idle"), 1500);
   };
 
   return (
-    <div className="rte-codeblock__header">
+    // <ConfigProvider
+    //   theme={{
+    //     // 1. Use dark algorithm alone
+    //     algorithm: themeAntd.darkAlgorithm,
+
+    //     // 2. Combine dark algorithm and compact algorithm
+    //     // algorithm: [theme.darkAlgorithm, theme.compactAlgorithm],
+    //   }}
+    // >
+    <div className="flex items-center justify-between gap-2 p-2 -mb-2 border-b">
       {onLanguageChange ? (
         <Select
-          className="rte-codeblock__select"
+          className="min-w-32"
           size="small"
-          variant="filled"
           aria-label="Code language"
           disabled={!editable}
           value={resolved?.id ?? language}
@@ -115,13 +125,12 @@ export const CodeBlockHeader = ({
         <span className="rte-codeblock__lang">{resolved?.label ?? language}</span>
       )}
 
-      <div className="rte-codeblock__actions">
+      <div className="flex items-center gap-2">
         <Button
-          className="rte-codeblock__copy"
           size="small"
-          type="text"
           aria-label="Copy code"
-          icon={copied === "ok" ? <CheckIcon /> : <CopyIcon />}
+          // icon={copied === "ok" ? <CheckIcon /> : <CopyIcon />}
+          icon={<b>{copied === "ok" ? "✓" : "⧉"}</b>}
           onClick={onCopy}
         >
           {copied === "ok" 
@@ -132,9 +141,8 @@ export const CodeBlockHeader = ({
           }
         </Button>
         <Select
-          className="rte-codeblock__select rte-codeblock__select--theme"
+          className="min-w-20"
           size="small"
-          variant="filled"
           aria-label="Code theme"
           value={theme}
           options={THEME_OPTIONS}
@@ -143,5 +151,6 @@ export const CodeBlockHeader = ({
         />
       </div>
     </div>
+    // </ConfigProvider>
   );
 };

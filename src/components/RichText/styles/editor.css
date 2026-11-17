@@ -48,7 +48,7 @@
   background-color: #1677ff;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s;
+  /* transition: opacity 0.15s; */
 }
 
 .rte-editor td:hover > .column-resize-handle,
@@ -89,7 +89,7 @@
   border-radius: 2px;
   background: #fff;
   cursor: pointer;
-  transition: background 0.08s, border-color 0.08s;
+  /* transition: background-color 0.08s, border-color 0.08s; */
 }
 
 .rte-table-gridpicker__cell.is-active {
