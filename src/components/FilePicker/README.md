@@ -5,6 +5,8 @@ A thin wrapper around antd [`Upload.Dragger`](https://ant.design/components/uplo
 - `maxBytes` – per-file size limit
 - `webcam` – take a photo with the camera
 - `screenCapture` – capture a screenshot of a screen/window/tab
+- `webcamRecord` – record a video with the camera (and microphone)
+- `screenRecord` – record a video of a screen/window/tab
 - `pasteUrl` – add a file from a link ("From URL" button)
 - `renderExtra` – slot for future buttons (File Manager, Google Drive, ...)
 - Pasted screenshots are renamed to `pasted-<timestamp>.png` instead of the generic `image.png`
@@ -52,6 +54,8 @@ Inside a form (uploading is controlled by antd, so use `valuePropName`/`getValue
 | `maxBytes`      | `number`               | Max size per file in bytes. Larger files are rejected with an error message and not added to the list. |
 | `webcam`        | `boolean`              | Show the "Take a photo" button. Auto-hidden if unsupported.                                           |
 | `screenCapture` | `boolean`              | Show the "Capture screen" button. Auto-hidden if unsupported.                                         |
+| `webcamRecord`  | `boolean`              | Show the "Record Video" button (camera + microphone). Auto-hidden if unsupported.                     |
+| `screenRecord`  | `boolean`              | Show the "Record Screen" button. Auto-hidden if unsupported.                                          |
 | `pasteUrl`      | `boolean`              | Show the "From URL" button: add a file by entering a link.                                            |
 | `fetchUrl`      | `(url, signal) => Promise<Blob>` | Custom fetch for `pasteUrl`, e.g. through a backend proxy to get around CORS.               |
 | `urlTimeout`    | `number`               | Timeout of the URL fetch in ms. Default `15000`.                                                      |
@@ -101,6 +105,17 @@ The `pasted-<timestamp>` rename applies to any file named `image.png`/`image.jpg
 - If permission is denied (webcam) or the device cannot be opened, an error message is shown and the modal closes. Cancelling the screen picker closes the modal silently.
 - The media stream is always stopped when the modal closes (including when it is closed while the browser is still asking for permission), so the camera/screen indicator turns off.
 
+### Video recording (`webcamRecord` & `screenRecord`)
+- Buttons appear only when the same conditions as webcam/screen capture are met **and** the browser has `MediaRecorder`.
+- The modal shows the live preview. Press **Start Recording**, then **Stop Recording**, review the video, and choose **Use** or **Retake**.
+- **Countdown:** after pressing **Start Recording** (webcam or screen), a big 3 → 2 → 1 countdown is shown (like the Windows 11 Snipping Tool) before recording starts, which gives you time to get ready or switch to the window you want to record. **Cancel** during the countdown aborts it. If you share the current tab, the countdown overlay may appear in the first moments of the recording.
+- **Mirrored file:** a webcam recording is mirrored **inside the saved file** (not only in the preview). Frames are flipped on a `<canvas>` and the canvas is recorded together with the microphone audio. Screen recordings are never mirrored.
+- Format: the first supported of `video/webm;codecs=vp9,opus`, `vp8,opus`, `video/webm`, `video/mp4` (Safari). File name: `webcam-record-<timestamp>.webm` / `screen-record-<timestamp>.webm` (`.mp4` when the browser records mp4).
+- The result is a normal `File`, so it goes through `accept`, `maxBytes`, `maxCount`, `beforeUpload`, `action` and `onChange`. Make sure `accept` allows `video/*`, otherwise the recording is rejected.
+- No microphone? A webcam recording continues without sound and a warning is shown. If the microphone is only denied, the browser denies camera and microphone together, so you get the "Permission denied." error.
+- If the user clicks the browser's "Stop sharing" while recording a screen, the recording is stopped and shown for review instead of being lost.
+- Limitations: a webcam recording freezes while the browser tab is hidden (the mirroring loop uses `requestAnimationFrame`), and `maxBytes` is only checked after the recording is finished.
+
 ### From URL (`pasteUrl`)
 - The **From URL** button opens a modal with an input. Press **Enter** or **Add** to fetch the link. **Cancel**/close aborts a running request.
 - Flow: validate the URL (`http:`/`https:` only) → `fetch` with timeout (`urlTimeout`) → check `res.ok` → check `Content-Length` and the real size against `maxBytes` → check the type against `accept` → add as a `File`. It then goes through the normal antd pipeline (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
@@ -135,6 +150,8 @@ An `http://` link cannot be fetched from an `https://` page (mixed content) and 
 Uses refine's `useTranslate` with English defaults. Keys:
 
 `filePicker.text`, `filePicker.orPaste`, `filePicker.maxSize` (`{{max}}`), `filePicker.tooLarge` (`{{name}}`, `{{max}}`), `filePicker.notAccepted`, `filePicker.webcam`, `filePicker.screenCapture`, `filePicker.capture`, `filePicker.retake`, `filePicker.use`, `filePicker.captureFailed`, `filePicker.permissionDenied`, `buttons.cancel`.
+
+Recording: `filePicker.webcamRecord`, `filePicker.screenRecord`, `filePicker.startRecording`, `filePicker.stopRecording`, `filePicker.noMicrophone`, `filePicker.recordNotSupported`.
 
 From URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`, `filePicker.urlInvalid`, `filePicker.urlProtocol`, `filePicker.urlHttp` (`{{status}}`), `filePicker.urlTimeout`, `filePicker.urlTooLarge` (`{{max}}`), `filePicker.urlTooLargeNoMax`, `filePicker.urlNetwork`.
 
