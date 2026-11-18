@@ -114,6 +114,34 @@ Markdown is serialized without losing information: constructs that Markdown cann
 - Uses the CSS classes `rte-*` (`../styles`); `mathlive/static.css` is imported by the component.
 - `core/nodes/CodeBlock/languages.generated.ts` is generated from `@codemirror/language-data` (143 languages). Regenerate it if that package changes the list.
 
+## Future features
+
+> Planned / optional. **Not implemented**, so the details below may change.
+
+### Image width stored as a number (percent)
+
+Today the image `width` attribute is a CSS string (`"50%"`, `"480px"`), and the resize handles, the size presets, the Slider and the "Custom Width" input each write it in their own way. The idea is to store **one number, a percentage from 1 to 100**, and build the CSS string only when rendering.
+
+Why:
+- The Slider and the InputNumber bind to the attribute directly, with no `parseFloat` / `formatter` / `parser`.
+- Only one validation is needed (an integer from 1 to 100). A number cannot carry CSS, so a document can no longer smuggle `50%; position:fixed` or `50%" onerror=...` into the HTML/Markdown `style` attribute.
+- HTML and Markdown output is always valid (`width: 50%`), and unitless values such as `"480"` stop being lost.
+
+Design notes:
+- **Old data.** Before this change `width` was a number of **pixels** (`width: 480`, `width="480"`), so `480` would suddenly mean 480%. Reads must go through one tolerant helper, used by `ImageFigure`, `renderHTML` and `markdown.ts` (Tiptap does not run `parseHTML` when it loads JSON, so the render side must normalize too):
+  ```ts
+  toPercent(value): number | null
+  // number 1..100     -> value (rounded)
+  // "50%"             -> 50
+  // px, > 100, NaN    -> null  (natural size, nothing breaks)
+  ```
+  A px width cannot be converted to a percentage without knowing the container width, so it falls back to the natural size. Document this in the migration notes.
+- **Single conversion point.** `` width ? `${toPercent(width)}%` : "fit-content" `` only in the renderers; every writer (handles, presets, Slider, InputNumber) stores the integer.
+- **Attribute name.** Either keep `width` and document that it holds a percentage, or rename it to `widthPercent`. A rename removes the ambiguity with old pixel values but is a bigger migration.
+- **Always round.** Store integers, to avoid values such as `33.3333`.
+- **Slider.** `onChange` fires on every move and creates one transaction per move (like the resize handles). Keep a local value for the live preview and save it in `onChangeComplete`; show the value with `` tooltip={{ formatter: (v) => `${v}%` }} ``.
+- **Limit.** A maximum of 100 means an image can never be wider than its container. This is intended.
+
 ## Structure
 
 ```
