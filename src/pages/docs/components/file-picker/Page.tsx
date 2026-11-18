@@ -45,11 +45,13 @@ export default function Page() {
       <FilePicker
         multiple
         maxCount={5}
-        accept="image/*,.pdf"
+        accept="image/*,video/*" // .pdf
         maxBytes={5 * 1024 * 1024}
         pastable={pastable}
         webcam={webcam}
+        webcamRecord
         screenCapture={screenCapture}
+        screenRecord
         pasteUrl={pasteUrl}
         disabled={disabled}
         listType="picture"
