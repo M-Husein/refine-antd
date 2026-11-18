@@ -5,6 +5,8 @@ Pembungkus tipis untuk antd [`Upload.Dragger`](https://ant.design/components/upl
 - `maxBytes` – batas ukuran per file
 - `webcam` – ambil foto dengan kamera
 - `screenCapture` – tangkap layar / jendela / tab
+- `webcamRecord` – rekam video dengan kamera (dan mikrofon)
+- `screenRecord` – rekam video layar / jendela / tab
 - `pasteUrl` – tambah file dari tautan (tombol "From URL")
 - `renderExtra` – slot untuk tombol masa depan (File Manager, Google Drive, ...)
 - Screenshot hasil paste diberi nama `pasted-<timestamp>.png`, bukan `image.png` yang generik
@@ -52,6 +54,8 @@ Di dalam form (upload dikontrol antd, jadi gunakan `valuePropName`/`getValueFrom
 | `maxBytes`      | `number`               | Ukuran maksimal per file (bytes). File yang lebih besar ditolak dengan pesan error dan tidak masuk list. |
 | `webcam`        | `boolean`              | Tampilkan tombol "Ambil foto". Otomatis tersembunyi jika tidak didukung.                                |
 | `screenCapture` | `boolean`              | Tampilkan tombol "Tangkap layar". Otomatis tersembunyi jika tidak didukung.                             |
+| `webcamRecord`  | `boolean`              | Tampilkan tombol "Record Video" (kamera + mikrofon). Otomatis tersembunyi jika tidak didukung.          |
+| `screenRecord`  | `boolean`              | Tampilkan tombol "Record Screen". Otomatis tersembunyi jika tidak didukung.                             |
 | `pasteUrl`      | `boolean`              | Tampilkan tombol "From URL": tambah file dengan memasukkan tautan.                                      |
 | `fetchUrl`      | `(url, signal) => Promise<Blob>` | Fetch kustom untuk `pasteUrl`, mis. lewat proxy backend untuk mengatasi CORS.                 |
 | `urlTimeout`    | `number`               | Timeout fetch URL dalam ms. Default `15000`.                                                            |
@@ -101,6 +105,17 @@ Rename `pasted-<timestamp>` berlaku untuk file bernama `image.png`/`image.jpg`/.
 - Jika izin ditolak (webcam) atau perangkat tidak bisa dibuka, pesan error ditampilkan dan modal ditutup. Membatalkan dialog pilih layar menutup modal tanpa pesan.
 - Stream media selalu dimatikan saat modal ditutup (termasuk saat ditutup ketika browser masih meminta izin), sehingga indikator kamera/layar mati.
 
+### Rekam video (`webcamRecord` & `screenRecord`)
+- Tombol hanya muncul jika syarat yang sama dengan webcam/screen capture terpenuhi **dan** browser punya `MediaRecorder`.
+- Modal menampilkan pratinjau langsung. Tekan **Start Recording**, lalu **Stop Recording**, tinjau videonya, dan pilih **Use** atau **Retake**.
+- **Countdown:** setelah menekan **Start Recording** (webcam atau layar), countdown besar 3 → 2 → 1 ditampilkan (seperti Snipping Tool Windows 11) sebelum rekaman dimulai, sehingga ada waktu bersiap atau berpindah ke jendela yang ingin direkam. **Cancel** saat countdown membatalkannya. Jika Anda membagikan tab saat ini, overlay countdown bisa muncul di beberapa detik pertama rekaman.
+- **File ter-mirror:** rekaman webcam ter-mirror **di dalam file yang disimpan** (bukan hanya di pratinjau). Frame dibalik di `<canvas>` dan canvas itu direkam bersama audio mikrofon. Rekaman layar tidak pernah di-mirror.
+- Format: yang pertama didukung dari `video/webm;codecs=vp9,opus`, `vp8,opus`, `video/webm`, `video/mp4` (Safari). Nama file: `webcam-record-<timestamp>.webm` / `screen-record-<timestamp>.webm` (`.mp4` jika browser merekam mp4).
+- Hasilnya `File` biasa, sehingga melewati `accept`, `maxBytes`, `maxCount`, `beforeUpload`, `action` dan `onChange`. Pastikan `accept` mengizinkan `video/*`, kalau tidak rekaman akan ditolak.
+- Tidak ada mikrofon? Rekaman webcam tetap berjalan tanpa suara dan peringatan ditampilkan. Jika mikrofon hanya ditolak, browser menolak kamera dan mikrofon sekaligus, sehingga muncul error "Permission denied.".
+- Jika pengguna menekan "Stop sharing" dari browser saat merekam layar, rekaman dihentikan dan ditampilkan untuk ditinjau, bukan hilang.
+- Keterbatasan: rekaman webcam membeku selama tab browser tersembunyi (loop mirror memakai `requestAnimationFrame`), dan `maxBytes` baru dicek setelah rekaman selesai.
+
 ### Dari URL (`pasteUrl`)
 - Tombol **From URL** membuka modal berisi input. Tekan **Enter** atau **Add** untuk mengambil tautan. **Cancel**/tutup modal membatalkan request yang sedang berjalan.
 - Alur: validasi URL (hanya `http:`/`https:`) → `fetch` dengan timeout (`urlTimeout`) → cek `res.ok` → cek `Content-Length` dan ukuran sebenarnya terhadap `maxBytes` → cek tipe terhadap `accept` → ditambahkan sebagai `File`. Setelah itu melewati alur antd seperti biasa (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
@@ -135,6 +150,8 @@ Tautan `http://` tidak bisa di-fetch dari halaman `https://` (mixed content) dan
 Memakai `useTranslate` dari refine dengan default Bahasa Inggris. Key:
 
 `filePicker.text`, `filePicker.orPaste`, `filePicker.maxSize` (`{{max}}`), `filePicker.tooLarge` (`{{name}}`, `{{max}}`), `filePicker.notAccepted`, `filePicker.webcam`, `filePicker.screenCapture`, `filePicker.capture`, `filePicker.retake`, `filePicker.use`, `filePicker.captureFailed`, `filePicker.permissionDenied`, `buttons.cancel`.
+
+Rekam: `filePicker.webcamRecord`, `filePicker.screenRecord`, `filePicker.startRecording`, `filePicker.stopRecording`, `filePicker.noMicrophone`, `filePicker.recordNotSupported`.
 
 Dari URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`, `filePicker.urlInvalid`, `filePicker.urlProtocol`, `filePicker.urlHttp` (`{{status}}`), `filePicker.urlTimeout`, `filePicker.urlTooLarge` (`{{max}}`), `filePicker.urlTooLargeNoMax`, `filePicker.urlNetwork`.
 

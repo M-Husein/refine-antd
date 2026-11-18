@@ -80,6 +80,16 @@ const supportsScreen = () =>
   window.isSecureContext &&
   !!navigator.mediaDevices?.getDisplayMedia;
 
+const supportsRecord = () => typeof MediaRecorder !== 'undefined';
+
+/** Tried in order; the first one the browser supports is used (Safari: mp4). */
+const RECORD_MIME_TYPES = [
+  'video/webm;codecs=vp9,opus',
+  'video/webm;codecs=vp8,opus',
+  'video/webm',
+  'video/mp4',
+];
+
 /* ------------------------------ URL -> File ------------------------------ */
 
 type UrlErrorCode = 'invalid' | 'protocol' | 'network' | 'http' | 'timeout' | 'type' | 'size' | 'aborted';
@@ -237,24 +247,55 @@ const CaptureModal = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const stopDrawRef = useRef<(() => void) | null>(null); // stops the mirroring canvas loop (webcamRecord)
   const chunksRef = useRef<Blob[]>([]);
   const [shot, setShot] = useState<{ file: File; url: string } | null>(null);
   const [recordedVideo, setRecordedVideo] = useState<{ file: File; url: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null); // 3 → 2 → 1 before a recording starts
+  const countdownTimerRef = useRef<number | null>(null);
 
   const handleClose = useEffectEvent(() => onClose());
   const handleError = useEffectEvent((key: string, fallback: string) => msg.error(t(key, fallback)));
+  const handleWarn = useEffectEvent((key: string, fallback: string) => msg.warning(t(key, fallback)));
+
+  // The user stopped sharing from the browser UI: finish a running recording instead of losing it.
+  const handleEnded = useEffectEvent(() => {
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state === 'recording') recorder.stop();
+    else onClose();
+  });
+
+  // Drops the recorder without producing a file (modal closed / unmounted).
+  const discardRecorder = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    mediaRecorderRef.current = null;
+    if (recorder) {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      // stop() throws InvalidStateError on an inactive recorder
+      if (recorder.state !== 'inactive') recorder.stop();
+    }
+    stopDrawRef.current?.();
+    stopDrawRef.current = null;
+  }, []);
+
+  const clearCountdown = useCallback(() => {
+    if (countdownTimerRef.current !== null) {
+      window.clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setCountdown(null);
+  }, []);
 
   const stopStream = useCallback(() => {
-    mediaRecorderRef.current?.stop();
+    clearCountdown();
+    discardRecorder();
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-      videoRef.current.src = '';
-    }
-  }, []);
+    if (videoRef.current) videoRef.current.srcObject = null;
+  }, [clearCountdown, discardRecorder]);
 
   const setVideoEl = useCallback((el: HTMLVideoElement | null) => {
     videoRef.current = el;
@@ -266,24 +307,37 @@ const CaptureModal = ({
   useEffect(() => {
     if (!kind) return;
     let cancelled = false;
+    /* eslint-disable react-hooks/set-state-in-effect -- reset the review state each time the modal opens */
     setShot(null);
     setRecordedVideo(null);
     setIsRecording(false);
     setIsVideoReady(false);
+    setCountdown(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     (async () => {
       try {
-        const isRecord = kind === 'webcamRecord' || kind === 'screenRecord';
-        const stream =
-          kind === 'webcam' || kind === 'webcamRecord'
-            ? await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'user' }, 
-                audio: isRecord 
-              })
-            : await navigator.mediaDevices.getDisplayMedia({ 
-                video: true, 
-                audio: isRecord 
-              });
+        const getWebcam = (audio: boolean) =>
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio });
+
+        let stream: MediaStream;
+        if (kind === 'webcam') {
+          stream = await getWebcam(false);
+        } else if (kind === 'webcamRecord') {
+          try {
+            stream = await getWebcam(true);
+          } catch (err) {
+            // No microphone: record without sound instead of failing completely
+            if (cancelled || (err as DOMException)?.name !== 'NotFoundError') throw err;
+            stream = await getWebcam(false);
+            if (!cancelled) handleWarn('filePicker.noMicrophone', 'No microphone found, recording without sound.');
+          }
+        } else {
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: kind === 'screenRecord',
+          });
+        }
 
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
@@ -291,7 +345,7 @@ const CaptureModal = ({
         }
 
         streamRef.current = stream;
-        stream.getVideoTracks()[0]?.addEventListener('ended', () => handleClose());
+        stream.getVideoTracks()[0]?.addEventListener('ended', () => handleEnded());
         if (videoRef.current) videoRef.current.srcObject = stream;
       } catch (err) {
         if (cancelled) return;
@@ -319,19 +373,68 @@ const CaptureModal = ({
   }, [shot, recordedVideo]);
 
   const startRecording = () => {
-    if (!videoRef.current || !streamRef.current || !kind) return;
+    const video = videoRef.current;
+    const source = streamRef.current;
+    if (!video || !source || !kind) return;
     chunksRef.current = [];
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
-      ? 'video/webm;codecs=vp9' 
-      : 'video/webm';
-    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+
+    let recordStream: MediaStream = source;
+
+    if (kind === 'webcamRecord') {
+      // Mirror the RECORDED FILE (not just the preview): draw every frame flipped on a canvas
+      // and record the canvas stream, plus the original audio.
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx || !width || !height) {
+        msg.error(t('filePicker.captureFailed', 'Unable to access the device.'));
+        return;
+      }
+
+      let raf = 0;
+      const draw = () => {
+        ctx.setTransform(-1, 0, 0, 1, width, 0); // horizontal flip
+        ctx.drawImage(video, 0, 0, width, height);
+        raf = requestAnimationFrame(draw);
+      };
+      draw();
+
+      const mirrored = canvas.captureStream(30);
+      source.getAudioTracks().forEach((track) => mirrored.addTrack(track));
+      recordStream = mirrored;
+      // Only stop the canvas video track: the audio track is shared with the live stream (needed for "Retake").
+      stopDrawRef.current = () => {
+        cancelAnimationFrame(raf);
+        mirrored.getVideoTracks().forEach((track) => track.stop());
+      };
+    }
+
+    const mimeType = RECORD_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(recordStream, mimeType ? { mimeType } : undefined);
+    } catch {
+      stopDrawRef.current?.();
+      stopDrawRef.current = null;
+      msg.error(t('filePicker.recordNotSupported', 'Recording is not supported by this browser.'));
+      return;
+    }
+
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-      const prefix = kind.includes('webcam') ? 'webcam' : 'screen';
-      const file = new File([blob], `${prefix}-record-${timestamp()}.webm`, { type: 'video/webm' });
+      stopDrawRef.current?.();
+      stopDrawRef.current = null;
+
+      const type = (recorder.mimeType || mimeType || 'video/webm').split(';')[0];
+      const ext = type === 'video/mp4' ? 'mp4' : 'webm';
+      const prefix = kind === 'webcamRecord' ? 'webcam' : 'screen';
+      const blob = new Blob(chunksRef.current, { type });
+      const file = new File([blob], `${prefix}-record-${timestamp()}.${ext}`, { type });
       setRecordedVideo({ file, url: URL.createObjectURL(file) });
       setIsRecording(false);
     };
@@ -344,22 +447,38 @@ const CaptureModal = ({
     mediaRecorderRef.current?.stop();
   };
 
+  // Webcam and screen recordings start after a 3-2-1 countdown (like the Windows 11 Snipping Tool).
+  const beginRecording = () => {
+    if (countdownTimerRef.current !== null) return;
+
+    let remaining = 3;
+    setCountdown(remaining);
+    countdownTimerRef.current = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) {
+        setCountdown(remaining);
+      } else {
+        clearCountdown();
+        startRecording();
+      }
+    }, 1000);
+  };
+
   const retakeVideo = () => {
+    // The user stopped sharing (screen) while recording: the stream is dead, nothing to retake from.
+    if (streamRef.current?.getVideoTracks()[0]?.readyState === 'ended') {
+      onClose();
+      return;
+    }
     if (recordedVideo?.url) URL.revokeObjectURL(recordedVideo.url);
     setRecordedVideo(null);
     setIsVideoReady(false);
-    if (videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-    }
   };
 
   const retakeShot = () => {
     if (shot?.url) URL.revokeObjectURL(shot.url);
     setShot(null);
     setIsVideoReady(false);
-    if (videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-    }
   };
 
   const confirmVideo = () => {
@@ -442,6 +561,10 @@ const CaptureModal = ({
               {t('filePicker.use', 'Use')}
             </Button>
           </Flex>
+        ) : countdown !== null ? (
+          <Flex gap={8} justify="flex-end">
+            <Button onClick={clearCountdown}>{t('buttons.cancel', 'Cancel')}</Button>
+          </Flex>
         ) : isRecording ? (
           <Flex gap={8} justify="flex-end">
             <Button danger onClick={stopRecording}>
@@ -456,7 +579,7 @@ const CaptureModal = ({
                 {t('filePicker.capture', 'Capture')}
               </Button>
             ) : (
-              <Button type="primary" onClick={startRecording} disabled={!isVideoReady}>
+              <Button type="primary" onClick={beginRecording} disabled={!isVideoReady}>
                 {t('filePicker.startRecording', 'Start Recording')}
               </Button>
             )}
@@ -483,10 +606,34 @@ const CaptureModal = ({
           controls
           disablePictureInPicture
           src={recordedVideo.url}
-          className={(kind === 'webcam' || kind === 'webcamRecord' ? 'mirror ' : '') + videoclassName}
+          // No "mirror" class: a webcam recording is already mirrored inside the file itself
+          className={videoclassName}
         />
       )}
       {shot && <img src={shot.url} alt="" className={videoclassName} />}
+
+      {countdown !== null && (
+        <div
+          key={countdown}
+          role="timer"
+          aria-live="assertive"
+          className="fixed inset-0 grid place-content-center text-center bg-black/40 text-white font-bold pointer-events-none"
+          style={{ 
+            zIndex: 1056, 
+            fontSize: 80, 
+            textShadow: '0 2px 16px rgb(0 0 0 / 60%)' 
+          }}
+        >
+          {countdown}
+          <Button 
+            size="large" 
+            className="pointer-events-auto"
+            onClick={clearCountdown}
+          >
+            {t('buttons.cancel', 'Cancel')}
+          </Button>
+        </div>
+      )}
     </Modal>
   );
 };
@@ -590,7 +737,7 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
         status={error ? 'error' : undefined}
         placeholder={t('filePicker.urlPlaceholder', 'https://example.com/image.png')}
         aria-label={t('filePicker.fromUrl', 'From URL')}
-        aria-invalid={!!error}
+        // aria-invalid={!!error}
         onChange={(evt) => {
           setValue(evt.target.value);
           if (error) setError(null);
@@ -632,8 +779,8 @@ export const FilePicker = ({
 
   const canWebcam = useMemo(() => !!webcam && supportsWebcam(), [webcam]);
   const canScreen = useMemo(() => !!screenCapture && supportsScreen(), [screenCapture]);
-  const canWebcamRecord = useMemo(() => !!webcamRecord && supportsWebcam(), [webcamRecord]);
-  const canScreenRecord = useMemo(() => !!screenRecord && supportsScreen(), [screenRecord]);
+  const canWebcamRecord = useMemo(() => !!webcamRecord && supportsWebcam() && supportsRecord(), [webcamRecord]);
+  const canScreenRecord = useMemo(() => !!screenRecord && supportsScreen() && supportsRecord(), [screenRecord]);
 
   const handleBeforeUpload: UploadProps['beforeUpload'] = (file, fileList) => {
     let next: File = file;

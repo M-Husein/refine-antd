@@ -11,6 +11,8 @@ export default function Page() {
   const [pastable, setPastable] = useState(true);
   const [webcam, setWebcam] = useState(true);
   const [screenCapture, setScreenCapture] = useState(true);
+  const [webcamRecord, setWebcamRecord] = useState(true);
+  const [screenRecord, setScreenRecord] = useState(true);
   const [pasteUrl, setPasteUrl] = useState(true);
   const [disabled, setDisabled] = useState(false);
 
@@ -28,6 +30,12 @@ export default function Page() {
           </label>
           <label className="flex items-center gap-2">
             <Switch checked={screenCapture} onChange={setScreenCapture} /> screenCapture
+          </label>
+          <label className="flex items-center gap-2">
+            <Switch checked={webcamRecord} onChange={setWebcamRecord} /> webcamRecord
+          </label>
+          <label className="flex items-center gap-2">
+            <Switch checked={screenRecord} onChange={setScreenRecord} /> screenRecord
           </label>
           <label className="flex items-center gap-2">
             <Switch checked={pasteUrl} onChange={setPasteUrl} /> pasteUrl
@@ -49,9 +57,9 @@ export default function Page() {
         maxBytes={5 * 1024 * 1024}
         pastable={pastable}
         webcam={webcam}
-        webcamRecord
+        webcamRecord={webcamRecord}
         screenCapture={screenCapture}
-        screenRecord
+        screenRecord={screenRecord}
         pasteUrl={pasteUrl}
         disabled={disabled}
         listType="picture"
