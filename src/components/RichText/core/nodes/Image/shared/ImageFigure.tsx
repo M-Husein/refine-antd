@@ -18,13 +18,13 @@ const alignToJustify: Record<ImageAlign, CSSProperties["alignItems"]> = {
 
 export interface ImageFigureProps {
   src: string;
-  alt?: string | null;
-  title?: string | null;
+  alt?: string;
+  title?: string;
   caption?: string | null;
   displayMode?: ImageDisplayMode;
   align?: ImageAlign;
-  width?: number | null;
-  height?: number | null;
+  width?: number;
+  height?: number;
   /** Extra content overlaid on/after the image — editor selection ring,
    * resize handles, upload progress, etc. Viewer never passes this. */
   editorOverlay?: ReactNode;
@@ -38,16 +38,17 @@ export interface ImageFigureProps {
  * content visually the same").
  */
 export const ImageFigure = ({
-  src,
-  alt,
-  title,
+  // src,
+  // alt,
+  // title,
+  // width,
+  // height,
   caption,
   displayMode = "block",
   align = "left",
-  width,
-  height,
   editorOverlay,
   className,
+  ...etc
 }: ImageFigureProps) => {
   const floatStyle: CSSProperties =
     displayMode === "float-left"
@@ -58,7 +59,7 @@ export const ImageFigure = ({
 
   return (
     <figure
-      className={["rte-image", `rte-image--${displayMode}`, className]
+      className={["rte-image", "rte-image--" + displayMode, className]
         .filter(Boolean)
         .join(" ")}
       style={floatStyle}
@@ -66,11 +67,12 @@ export const ImageFigure = ({
     >
       <div className="relative inline-block">
         <img
-          src={src}
-          alt={alt ?? ""}
-          title={title ?? undefined}
-          width={width ?? undefined}
-          height={height ?? undefined}
+          // src={src}
+          // alt={alt}
+          // title={title}
+          // width={width}
+          // height={height}
+          {...etc}
           className="block max-w-full"
         />
         {editorOverlay}
@@ -82,8 +84,8 @@ export const ImageFigure = ({
 
 export interface ImageInlineSpanProps {
   src: string;
-  alt?: string | null;
-  width?: number | null;
+  alt?: string;
+  width?: number;
   verticalAlign?: ImageVerticalAlign;
   editorOverlay?: ReactNode;
   className?: string;
@@ -97,17 +99,17 @@ export const ImageInlineSpan = ({
   editorOverlay,
   className,
 }: ImageInlineSpanProps) => (
-  <div // span
+  <span
     className={["rte-image-inline relative inline-block", className].filter(Boolean).join(" ")}
     // style={{ position: "relative", display: "inline-block" }}
   >
     <img
       src={src}
-      alt={alt ?? ""}
-      width={width ?? undefined}
+      alt={alt}
+      width={width}
       className="max-w-full"
       style={{ verticalAlign }} // , maxWidth: "100%"
     />
     {editorOverlay}
-  </div>
+  </span>
 );

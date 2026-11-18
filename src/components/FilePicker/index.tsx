@@ -8,6 +8,7 @@ import {
   DesktopOutlined,
   InboxOutlined,
   LinkOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { useTranslate } from '@refinedev/core';
 
@@ -18,6 +19,10 @@ export type FilePickerProps = Omit<UploadProps, 'children'> & {
   webcam?: boolean;
   /** Show the screen capture button. Hidden if the browser does not support it. */
   screenCapture?: boolean;
+  /** Show the webcam video record button. Hidden if the browser does not support it. */
+  webcamRecord?: boolean;
+  /** Show the screen video record button. Hidden if the browser does not support it. */
+  screenRecord?: boolean;
   /** Show the "From URL" button: add a file by entering a link (fetched in the browser). */
   pasteUrl?: boolean;
   /**
@@ -37,7 +42,7 @@ export type FilePickerProps = Omit<UploadProps, 'children'> & {
   ref?: Ref<UploadRef>;
 };
 
-type CaptureKind = 'webcam' | 'screen';
+type CaptureKind = 'webcam' | 'screen' | 'webcamRecord' | 'screenRecord';
 
 const videoclassName = "block aspect-video w-full object-contain bg-black rounded";
 
@@ -68,12 +73,10 @@ const matchesAccept = (file: File, accept?: UploadProps['accept']) => {
 };
 
 const supportsWebcam = () =>
-  // typeof window !== 'undefined' && // to support SSR
   window.isSecureContext &&
   !!navigator.mediaDevices?.getUserMedia;
 
 const supportsScreen = () =>
-  // typeof window !== 'undefined' && // to support SSR
   window.isSecureContext &&
   !!navigator.mediaDevices?.getDisplayMedia;
 
@@ -135,7 +138,6 @@ const defaultFetch = async (
   const res = await fetch(url, { signal });
   if (!res.ok) throw new UrlError('http', res.status);
 
-  // Fail fast, before downloading the body
   const length = Number(res.headers.get('content-length'));
   if (maxBytes && length > maxBytes) {
     void res.body?.cancel();
@@ -187,7 +189,6 @@ const urlToFile = async (
     if (err instanceof UrlError) throw err;
     if (timedOut) throw new UrlError('timeout');
     if (signal?.aborted || (err as DOMException)?.name === 'AbortError') throw new UrlError('aborted');
-    // fetch() rejects with a TypeError on network errors, which includes CORS failures
     throw new UrlError('network');
   } finally {
     clearTimeout(timer);
@@ -197,7 +198,6 @@ const urlToFile = async (
   const { blob } = fetched;
   if (maxBytes && blob.size > maxBytes) throw new UrlError('size');
 
-  // File name: Content-Disposition > last URL path segment > url-<timestamp>.<ext>
   const rawType = blob.type.split(';')[0].trim().toLowerCase();
   let lastSegment = url.pathname.split('/').filter(Boolean).pop() ?? '';
   try {
@@ -212,7 +212,6 @@ const urlToFile = async (
     name = `url-${timestamp()}${guessed ? `.${guessed}` : ''}`;
   }
 
-  // Type: response type, or guessed from the extension when the server sends none
   const type =
     rawType && rawType !== 'application/octet-stream' ? rawType : (ext && MIME_BY_EXT[ext]) || rawType;
 
@@ -237,20 +236,26 @@ const CaptureModal = ({
   const t = useTranslate();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const [shot, setShot] = useState<{ file: File; url: string } | null>(null);
+  const [recordedVideo, setRecordedVideo] = useState<{ file: File; url: string } | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Effect Events (React 19.2+): always see the latest props/translate without
-  // re-running the stream effect on every parent render.
   const handleClose = useEffectEvent(() => onClose());
   const handleError = useEffectEvent((key: string, fallback: string) => msg.error(t(key, fallback)));
 
   const stopStream = useCallback(() => {
+    mediaRecorderRef.current?.stop();
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = '';
+    }
   }, []);
 
-  // Callback ref: attach an already running stream as soon as <video> mounts (Modal mounts lazily).
   const setVideoEl = useCallback((el: HTMLVideoElement | null) => {
     videoRef.current = el;
     if (el && streamRef.current && el.srcObject !== streamRef.current) {
@@ -258,28 +263,34 @@ const CaptureModal = ({
     }
   }, []);
 
-  // Start/stop the stream together with the modal.
   useEffect(() => {
     if (!kind) return;
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShot(null);
+    setRecordedVideo(null);
+    setIsRecording(false);
+    setIsVideoReady(false);
 
     (async () => {
       try {
+        const isRecord = kind === 'webcamRecord' || kind === 'screenRecord';
         const stream =
-          kind === 'webcam'
-            ? await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-            : await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+          kind === 'webcam' || kind === 'webcamRecord'
+            ? await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user' }, 
+                audio: isRecord 
+              })
+            : await navigator.mediaDevices.getDisplayMedia({ 
+                video: true, 
+                audio: isRecord 
+              });
 
-        // Modal was closed while waiting for permission / the screen picker: release immediately.
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
           return;
         }
 
         streamRef.current = stream;
-        // User stopped sharing via the browser UI
         stream.getVideoTracks()[0]?.addEventListener('ended', () => handleClose());
         if (videoRef.current) videoRef.current.srcObject = stream;
       } catch (err) {
@@ -287,7 +298,7 @@ const CaptureModal = ({
         const name = (err as DOMException)?.name;
         if (name !== 'AbortError' && name !== 'NotAllowedError') {
           handleError('filePicker.captureFailed', 'Unable to access the device.');
-        } else if (name === 'NotAllowedError' && kind === 'webcam') {
+        } else if (name === 'NotAllowedError' && (kind === 'webcam' || kind === 'webcamRecord')) {
           handleError('filePicker.permissionDenied', 'Permission denied.');
         }
         handleClose();
@@ -300,35 +311,60 @@ const CaptureModal = ({
     };
   }, [kind, stopStream]);
 
-  // Release preview object URL
   useEffect(() => {
     return () => {
       if (shot?.url) URL.revokeObjectURL(shot.url);
+      if (recordedVideo?.url) URL.revokeObjectURL(recordedVideo.url);
     };
-  }, [shot]);
+  }, [shot, recordedVideo]);
 
-  const takeShot = () => {
-    const video = videoRef.current;
-    if (!video || !kind || !video.videoWidth) return;
+  const startRecording = () => {
+    if (!videoRef.current || !streamRef.current || !kind) return;
+    chunksRef.current = [];
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+      ? 'video/webm;codecs=vp9' 
+      : 'video/webm';
+    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const prefix = kind.includes('webcam') ? 'webcam' : 'screen';
+      const file = new File([blob], `${prefix}-record-${timestamp()}.webm`, { type: 'video/webm' });
+      setRecordedVideo({ file, url: URL.createObjectURL(file) });
+      setIsRecording(false);
+    };
+    mediaRecorderRef.current = recorder;
+    recorder.start();
+    setIsRecording(true);
+  };
 
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+  };
 
-    if (kind === 'webcam') {
-      // Mirror horizontally so the result matches the (mirrored) live preview
-      ctx?.translate(canvas.width, 0);
-      ctx?.scale(-1, 1);
+  const retakeVideo = () => {
+    if (recordedVideo?.url) URL.revokeObjectURL(recordedVideo.url);
+    setRecordedVideo(null);
+    setIsVideoReady(false);
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
     }
-    ctx?.drawImage(video, 0, 0);
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const prefix = kind === 'webcam' ? 'webcam' : 'screen';
-        const file = new File([blob], `${prefix}-${timestamp()}.png`, { type: 'image/png' });
-        setShot({ file, url: URL.createObjectURL(file) });
-      }
-    }, 'image/png');
+  };
+
+  const retakeShot = () => {
+    if (shot?.url) URL.revokeObjectURL(shot.url);
+    setShot(null);
+    setIsVideoReady(false);
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  };
+
+  const confirmVideo = () => {
+    if (recordedVideo && kind) onCapture(recordedVideo.file, kind);
+    onClose();
   };
 
   const confirmShot = () => {
@@ -336,50 +372,120 @@ const CaptureModal = ({
     onClose();
   };
 
+  const takeShot = () => {
+    const video = videoRef.current;
+    if (!video || !kind) {
+      msg.error('Video element not ready.');
+      return;
+    }
+
+    const width = video.videoWidth || video.clientWidth || 640;
+    const height = video.videoHeight || video.clientHeight || 480;
+
+    if (width === 0 || height === 0) {
+      msg.error('Video dimensions are not available. Please wait a moment and try again.');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    if (kind === 'webcam' || kind === 'webcamRecord') {
+      ctx?.translate(canvas.width, 0);
+      ctx?.scale(-1, 1);
+    }
+    
+    try {
+      ctx?.drawImage(video, 0, 0, width, height);
+    } catch (e) {
+      console.error("Failed to draw video to canvas", e);
+      msg.error("Failed to capture image. Please try again.");
+      return;
+    }
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const prefix = kind.includes('webcam') ? 'webcam' : 'screen';
+        const file = new File([blob], `${prefix}-${timestamp()}.png`, { type: 'image/png' });
+        setShot({ file, url: URL.createObjectURL(file) });
+      } else {
+        msg.error('Failed to generate image blob.');
+      }
+    }, 'image/png');
+  };
+
   return (
     <Modal
       open={!!kind}
       onCancel={onClose}
-      // destroyOnHidden
       centered
       width={720}
       title={
         kind === 'webcam'
           ? t('filePicker.webcam', 'Take a photo')
-          : t('filePicker.screenCapture', 'Capture screen')
+          : kind === 'webcamRecord'
+          ? t('filePicker.webcamRecord', 'Record Video')
+          : kind === 'screen'
+          ? t('filePicker.screenCapture', 'Capture screen')
+          : t('filePicker.screenRecord', 'Record Screen')
       }
       afterClose={stopStream}
       footer={
-        shot ? (
+        recordedVideo || shot ? (
           <Flex gap={8} justify="flex-end">
-            <Button onClick={() => setShot(null)}>
+            <Button onClick={recordedVideo ? retakeVideo : retakeShot}>
               {t('filePicker.retake', 'Retake')}
             </Button>
-            <Button type="primary" onClick={confirmShot}>
+            <Button type="primary" onClick={recordedVideo ? confirmVideo : confirmShot}>
               {t('filePicker.use', 'Use')}
+            </Button>
+          </Flex>
+        ) : isRecording ? (
+          <Flex gap={8} justify="flex-end">
+            <Button danger onClick={stopRecording}>
+              {t('filePicker.stopRecording', 'Stop Recording')}
             </Button>
           </Flex>
         ) : (
           <Flex gap={8} justify="flex-end">
             <Button onClick={onClose}>{t('buttons.cancel', 'Cancel')}</Button>
-            <Button type="primary" onClick={takeShot}>
-              {t('filePicker.capture', 'Capture')}
-            </Button>
+            {kind === 'webcam' || kind === 'screen' ? (
+              <Button type="primary" onClick={takeShot} disabled={!isVideoReady}>
+                {t('filePicker.capture', 'Capture')}
+              </Button>
+            ) : (
+              <Button type="primary" onClick={startRecording} disabled={!isVideoReady}>
+                {t('filePicker.startRecording', 'Start Recording')}
+              </Button>
+            )}
           </Flex>
         )
       }
     >
-      {/* Video stays mounted (hidden) during review so the stream is not restarted on "Retake". */}
-      <video
-        ref={setVideoEl}
-        autoPlay
-        playsInline
-        muted
-        disablePictureInPicture
-        hidden={!!shot}
-        className={(kind === 'webcam' ? 'mirror ' : '') + videoclassName}
-        onContextMenu={evt => evt.preventDefault()}
-      />
+      {!recordedVideo && !shot && (
+        <video
+          ref={setVideoEl}
+          autoPlay
+          playsInline
+          muted
+          disablePictureInPicture
+          className={(kind === 'webcam' || kind === 'webcamRecord' ? 'mirror ' : '') + videoclassName}
+          onContextMenu={evt => evt.preventDefault()}
+          onLoadedData={() => setIsVideoReady(true)}
+        />
+      )}
+      {recordedVideo && (
+        <video
+          autoPlay
+          playsInline
+          controls
+          disablePictureInPicture
+          src={recordedVideo.url}
+          className={(kind === 'webcam' || kind === 'webcamRecord' ? 'mirror ' : '') + videoclassName}
+        />
+      )}
       {shot && <img src={shot.url} alt="" className={videoclassName} />}
     </Modal>
   );
@@ -398,7 +504,6 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Abort a running fetch on unmount
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const describe = (err: unknown) => {
@@ -446,7 +551,7 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
       onFile(file);
       onClose();
     } catch (err) {
-      if (!ctrl.signal.aborted) setError(describe(err)); // aborted = user cancelled
+      if (!ctrl.signal.aborted) setError(describe(err));
     } finally {
       if (abortRef.current === ctrl) {
         abortRef.current = null;
@@ -492,22 +597,21 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
         }}
         onPressEnter={submit}
       />
-      <div role="alert" className="mt-2 text-red-500 empty:hidden">
-        {error}
-      </div>
+      {!!error && (
+        <div role="alert" className="mt-1 text-red-700 text-xs">
+          {error}
+        </div>
+      )}
     </Modal>
   );
 };
 
-/**
- * Thin wrapper around antd `Upload.Dragger`.
- * Supports every `Upload` prop, plus `maxBytes`, `webcam`, `screenCapture`, `renderExtra` and `hint`.
- * Paste is antd's own `pastable` prop.
- */
 export const FilePicker = ({
   maxBytes,
   webcam,
   screenCapture,
+  webcamRecord,
+  screenRecord,
   pasteUrl,
   fetchUrl,
   urlTimeout,
@@ -528,15 +632,15 @@ export const FilePicker = ({
 
   const canWebcam = useMemo(() => !!webcam && supportsWebcam(), [webcam]);
   const canScreen = useMemo(() => !!screenCapture && supportsScreen(), [screenCapture]);
+  const canWebcamRecord = useMemo(() => !!webcamRecord && supportsWebcam(), [webcamRecord]);
+  const canScreenRecord = useMemo(() => !!screenRecord && supportsScreen(), [screenRecord]);
 
   const handleBeforeUpload: UploadProps['beforeUpload'] = (file, fileList) => {
     let next: File = file;
 
-    // Pasted screenshots are named "image.png"; give them a unique name.
     if (pastable && GENERIC_PASTE_NAMES.has(file.name) && file.type.startsWith('image/')) {
       const ext = file.name.split('.').pop();
       next = new File([file], `pasted-${timestamp()}.${ext}`, { type: file.type });
-      // keep antd's uid so the list entry stays consistent
       (next as File & { uid?: string }).uid = (file as File & { uid?: string }).uid;
     }
 
@@ -554,10 +658,6 @@ export const FilePicker = ({
     return next as typeof file;
   };
 
-  /**
-   * Feeds a file (webcam, screen capture, URL) into antd's own pipeline by setting it on the hidden
-   * <input type="file">, so accept / maxCount / beforeUpload / action / onChange all behave as usual.
-   */
   const addFile = (file: File) => {
     if (!matchesAccept(file, accept)) {
       messageApi.error(t('filePicker.notAccepted', 'This file type is not accepted.'));
@@ -596,7 +696,7 @@ export const FilePicker = ({
         )}
       </Upload.Dragger>
 
-      {(canWebcam || canScreen || pasteUrl || renderExtra) && (
+      {(canWebcam || canScreen || canWebcamRecord || canScreenRecord || pasteUrl || renderExtra) && (
         <Flex gap={4} wrap style={{ marginTop: 8 }}>
           {canWebcam && (
             <Button 
@@ -614,6 +714,24 @@ export const FilePicker = ({
               onClick={() => setCapture('screen')} 
             >
               {t('filePicker.screenCapture', 'Capture screen')}
+            </Button>
+          )}
+          {canWebcamRecord && (
+            <Button 
+              icon={<VideoCameraOutlined />} 
+              disabled={disabled} 
+              onClick={() => setCapture('webcamRecord')} 
+            >
+              {t('filePicker.webcamRecord', 'Record Video')}
+            </Button>
+          )}
+          {canScreenRecord && (
+            <Button 
+              icon={<VideoCameraOutlined />} 
+              disabled={disabled} 
+              onClick={() => setCapture('screenRecord')} 
+            >
+              {t('filePicker.screenRecord', 'Record Screen')}
             </Button>
           )}
           {pasteUrl && (
@@ -641,7 +759,7 @@ export const FilePicker = ({
         />
       )}
 
-      {(canWebcam || canScreen) && (
+      {(canWebcam || canScreen || canWebcamRecord || canScreenRecord) && (
         <CaptureModal 
           msg={messageApi}
           kind={capture} 
