@@ -1,6 +1,5 @@
 // import { useEffect } from "react"; // , useState
 import { useTranslate } from "@refinedev/core"; // useResource
-// import { RefineErrorPageProps } from "@refinedev/ui-types";
 // import { Button, Result } from "antd";
 import { Link } from "react-router"; // useNavigate
 // import { toggleLoaderApp } from '@/utils/dom';

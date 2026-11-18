@@ -1,6 +1,5 @@
 // import { useState, useEffect } from 'react';
 import { Layout } from 'antd';
-// import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 // en-GB | id-ID

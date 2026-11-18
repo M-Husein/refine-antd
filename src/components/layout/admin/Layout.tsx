@@ -1,7 +1,6 @@
 import '@/styles/components/layout_main.scss';
 
 // import { useMemo } from "react";
-// import { ThemedLayoutV2 } from "@refinedev/antd"; // useTranslate, ThemedTitleV2, ThemedSiderV2
 // import { HttpError, useList } from "@refinedev/core"; // useGetIdentity, useOne, useUpdate
 import { Layout as AntdLayout, FloatButton } from 'antd';
 import { FaArrowUp } from "react-icons/fa";

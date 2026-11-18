@@ -3,8 +3,8 @@ const APP = Object.freeze({
   name:appName,
   defaultLang:"id",
   timeout:30000,
-  locales:{
+  locales:Object.freeze({
     id:"Indonesia",
     en:"English"
-  }
+  })
 });

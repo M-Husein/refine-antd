@@ -64,19 +64,19 @@ Opens a modal with a [`FilePicker`](../../FilePicker/README.md): pick, drop or p
 
 ```tsx
 <Space>
-  <ImageControl pasteUrl webcam multiple maxBytes={2 * 1024 * 1024} />
+  <ImageControl pasteUrl webcam multiple />
 </Space>
 ```
 
 | Prop | Description |
 | --- | --- |
-| FilePicker props | `pasteUrl`, `webcam`, `screenCapture`, `fetchUrl`, `urlTimeout`, `maxBytes`, `multiple`, `maxCount`, `accept` (default `image/*`), `pastable` (default `true`), `action`, `customRequest`, `beforeUpload`, `onChange`, `listType`, `hint`, `renderExtra`, ... |
+| FilePicker props | `pasteUrl`, `webcam`, `screenCapture`, `fetchUrl`, `urlTimeout`, `multiple`, `maxCount`, `accept` (default `image/*`), `pastable` (default `true`), `action`, `customRequest`, `beforeUpload`, `onChange`, `listType`, `hint`, `renderExtra`, ... |
 | `getUrl(file)` | Turns an uploaded `UploadFile` into the image `src`. Default: the response when it is a string, else `response.url` / `response.data.url`, else `file.url`. |
 | `modalTitle`, `modalProps` | Title and extra props of the antd Modal. |
 | Button props | `icon`, `size`, `type`, `disabled`, `className`, ... go to the trigger button. A name shared with the FilePicker (`disabled`, `className`, `style`, `type`, `children`) keeps its **button** meaning; `name` and `onChange` go to the picker. `disabled` applies to both. |
 
 Where the image comes from:
-- **No `action` / `customRequest`:** the image is embedded as a **data URL** (base64). Simple, but the content grows by about 33% of the file size, so set `maxBytes` or upload instead.
+- **No `action` / `customRequest`:** the image is embedded as a **data URL** (base64). Simple, but the content grows by about 33% of the file size, so validate the size in `beforeUpload` or upload instead.
 - **`action="/api/upload"`** (or `customRequest`): the file is uploaded and the URL is read from the response (`getUrl`).
 
 Behavior: images of one batch are inserted together, in the order they were picked, once nothing is still uploading. An image is inserted **after** a currently selected image instead of replacing it. The modal closes when everything succeeded and stays open if a file failed, so the error remains visible. `src` values using `javascript:`, `vbscript:` or a non-image `data:` are rejected.
