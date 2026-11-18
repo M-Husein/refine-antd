@@ -164,21 +164,15 @@ export const routes: any[] = [
           },
         ]
       },
-      { 
-        path: "theme-editor", 
-        element: lazyComponent(lazy(() => import('@/pages/docs/theme-editor/Page'))) 
-      },
+      // { 
+      //   path: "theme-editor", 
+      //   element: lazyComponent(lazy(() => import('@/pages/docs/theme-editor/Page'))) 
+      // },
       { 
         path: "devs", 
         element: lazyComponent(lazy(() => import('@/pages/docs/devs/Page'))) 
       },
-      // {
-      //   path: "currencies", 
-      //   children: [
-      //     { index: true, element: lazyComponent(Currencies) },
-      //     // { path: ":id", element: lazyComponent(ShowTeam) },
-      //   ]
-      // },
+      { path: "*", Component: ErrorComponent },
 
       // {
       //   path: "settings",

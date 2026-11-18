@@ -13,8 +13,6 @@ import {
 import { useTranslate } from '@refinedev/core';
 
 export type FilePickerProps = Omit<UploadProps, 'children'> & {
-  /** Maximum size per file, in bytes. Larger files are rejected. */
-  maxBytes?: number;
   /** Show the webcam (selfie) button. Hidden if the browser does not support it. */
   webcam?: boolean;
   /** Show the screen capture button. Hidden if the browser does not support it. */
@@ -49,12 +47,6 @@ const videoclassName = "block aspect-video w-full object-contain bg-black rounde
 const GENERIC_PASTE_NAMES = new Set(['image.png', 'image.jpg', 'image.jpeg', 'image.gif', 'image.webp']);
 
 const timestamp = () => new Date().toISOString().replace(/[:.]/g, '-');
-
-const formatBytes = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 ** 2) return `${+(bytes / 1024).toFixed(1)} KB`;
-  return `${+(bytes / 1024 ** 2).toFixed(1)} MB`;
-};
 
 /** Minimal `accept` matcher: ".pdf", "image/*", "application/json". */
 const matchesAccept = (file: File, accept?: UploadProps['accept']) => {
@@ -92,7 +84,7 @@ const RECORD_MIME_TYPES = [
 
 /* ------------------------------ URL -> File ------------------------------ */
 
-type UrlErrorCode = 'invalid' | 'protocol' | 'network' | 'http' | 'timeout' | 'type' | 'size' | 'aborted';
+type UrlErrorCode = 'invalid' | 'protocol' | 'network' | 'http' | 'timeout' | 'type' | 'aborted';
 
 class UrlError extends Error {
   code: UrlErrorCode;
@@ -142,17 +134,10 @@ type FetchedBlob = { blob: Blob; name?: string };
 
 const defaultFetch = async (
   url: string,
-  signal: AbortSignal,
-  maxBytes?: number
+  signal: AbortSignal
 ): Promise<FetchedBlob> => {
   const res = await fetch(url, { signal });
   if (!res.ok) throw new UrlError('http', res.status);
-
-  const length = Number(res.headers.get('content-length'));
-  if (maxBytes && length > maxBytes) {
-    void res.body?.cancel();
-    throw new UrlError('size');
-  }
 
   return {
     blob: await res.blob(),
@@ -163,7 +148,6 @@ const defaultFetch = async (
 type UrlToFileOptions = {
   signal?: AbortSignal;
   accept?: UploadProps['accept'];
-  maxBytes?: number;
   timeout?: number;
   fetchUrl?: FilePickerProps['fetchUrl'];
 };
@@ -171,7 +155,7 @@ type UrlToFileOptions = {
 /** Fetches a URL and converts the response to a `File`. Throws `UrlError`. */
 const urlToFile = async (
   rawUrl: string,
-  { signal, accept, maxBytes, timeout = 15000, fetchUrl }: UrlToFileOptions
+  { signal, accept, timeout = 15000, fetchUrl }: UrlToFileOptions
 ): Promise<File> => {
   let url: URL;
   try {
@@ -194,7 +178,7 @@ const urlToFile = async (
   try {
     fetched = fetchUrl
       ? { blob: await fetchUrl(url.href, ctrl.signal) }
-      : await defaultFetch(url.href, ctrl.signal, maxBytes);
+      : await defaultFetch(url.href, ctrl.signal);
   } catch (err) {
     if (err instanceof UrlError) throw err;
     if (timedOut) throw new UrlError('timeout');
@@ -206,7 +190,6 @@ const urlToFile = async (
   }
 
   const { blob } = fetched;
-  if (maxBytes && blob.size > maxBytes) throw new UrlError('size');
 
   const rawType = blob.type.split(';')[0].trim().toLowerCase();
   let lastSegment = url.pathname.split('/').filter(Boolean).pop() ?? '';
@@ -642,7 +625,7 @@ type UrlModalProps = {
   open: boolean;
   onClose: () => void;
   onFile: (file: File) => void;
-} & Pick<UrlToFileOptions, 'accept' | 'maxBytes' | 'timeout' | 'fetchUrl'>;
+} & Pick<UrlToFileOptions, 'accept' | 'timeout' | 'fetchUrl'>;
 
 const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
   const t = useTranslate();
@@ -668,10 +651,6 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
         return t('filePicker.urlTimeout', 'The request took too long.');
       case 'type':
         return t('filePicker.notAccepted', 'This file type is not accepted.');
-      case 'size':
-        return options.maxBytes
-          ? t('filePicker.urlTooLarge', { max: formatBytes(options.maxBytes) }, `The file exceeds ${formatBytes(options.maxBytes)}.`)
-          : t('filePicker.urlTooLargeNoMax', 'The file is too large.');
       default:
         return t(
           'filePicker.urlNetwork',
@@ -736,7 +715,7 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
         disabled={loading}
         status={error ? 'error' : undefined}
         placeholder={t('filePicker.urlPlaceholder', 'https://example.com/image.png')}
-        aria-label={t('filePicker.fromUrl', 'From URL')}
+        // aria-label={t('filePicker.fromUrl', 'From URL')}
         // aria-invalid={!!error}
         onChange={(evt) => {
           setValue(evt.target.value);
@@ -754,7 +733,6 @@ const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
 };
 
 export const FilePicker = ({
-  maxBytes,
   webcam,
   screenCapture,
   webcamRecord,
@@ -789,13 +767,6 @@ export const FilePicker = ({
       const ext = file.name.split('.').pop();
       next = new File([file], `pasted-${timestamp()}.${ext}`, { type: file.type });
       (next as File & { uid?: string }).uid = (file as File & { uid?: string }).uid;
-    }
-
-    if (maxBytes && next.size > maxBytes) {
-      messageApi.error(
-        t('filePicker.tooLarge', { name: next.name, max: formatBytes(maxBytes) }, `${next.name} exceeds ${formatBytes(maxBytes)}.`)
-      );
-      return Upload.LIST_IGNORE;
     }
 
     if (beforeUpload) {
@@ -834,17 +805,22 @@ export const FilePicker = ({
               {t('filePicker.text', 'Click or drag files to this area')}
               {pastable && !disabled ? ` ${t('filePicker.orPaste', 'or paste')}` : ''}
             </p>
-            {(hint || maxBytes) && (
-              <div>
-                {hint ?? t('filePicker.maxSize', { max: formatBytes(maxBytes!) }, `Max size ${formatBytes(maxBytes!)} per file`)}
-              </div>
-            )}
+            {hint && <div>{hint}</div>}
           </>
         )}
       </Upload.Dragger>
 
       {(canWebcam || canScreen || canWebcamRecord || canScreenRecord || pasteUrl || renderExtra) && (
         <Flex gap={4} wrap style={{ marginTop: 8 }}>
+          {pasteUrl && (
+            <Button
+              icon={<LinkOutlined />}
+              disabled={disabled}
+              onClick={() => setUrlOpen(true)}
+            >
+              {t('filePicker.fromUrl', 'From URL')}
+            </Button>
+          )}
           {canWebcam && (
             <Button 
               icon={<CameraOutlined />} 
@@ -881,15 +857,6 @@ export const FilePicker = ({
               {t('filePicker.screenRecord', 'Record Screen')}
             </Button>
           )}
-          {pasteUrl && (
-            <Button
-              icon={<LinkOutlined />}
-              disabled={disabled}
-              onClick={() => setUrlOpen(true)}
-            >
-              {t('filePicker.fromUrl', 'From URL')}
-            </Button>
-          )}
           {renderExtra?.()}
         </Flex>
       )}
@@ -900,7 +867,6 @@ export const FilePicker = ({
           onClose={() => setUrlOpen(false)}
           onFile={addFile}
           accept={accept}
-          maxBytes={maxBytes}
           timeout={urlTimeout}
           fetchUrl={fetchUrl}
         />

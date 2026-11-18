@@ -73,11 +73,11 @@ export const RESOURCES: any[] = [
     list: "/docs/components/placeholder",
     meta: { parent: "components", label: "Placeholder", icon: <FaCode /> },
   },
-  {
-    name: "theme-editor",
-    list: "/docs/theme-editor",
-    meta: { label: "Theme Editor", icon: <b>🎨</b> }
-  },
+  // {
+  //   name: "theme-editor",
+  //   list: "/docs/theme-editor",
+  //   meta: { label: "Theme Editor", icon: <b>🎨</b> }
+  // },
   {
     name: "devs",
     list: "/docs/devs",

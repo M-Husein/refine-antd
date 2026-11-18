@@ -1,12 +1,8 @@
-// import "@refinedev/antd/dist/reset.css";
 import "./styles/style.scss";
 
 import { StrictMode } from 'react'; // React, 
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-
-// // import "@refinedev/antd/dist/reset.css";
-// import "./styles/style.scss";
 
 /** @NOTE : https://vitejs.dev/guide/env-and-mode.html#env-variables */
 // console.log('MODE: ', import.meta.env.MODE);

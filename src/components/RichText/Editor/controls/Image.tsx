@@ -35,7 +35,6 @@ export interface ImageProps
 
 /** Keys that belong to the FilePicker; everything else goes to the trigger button. */
 const PICKER_KEYS = new Set<string>([
-  "maxBytes",
   "webcam",
   "screenCapture",
   "pasteUrl",

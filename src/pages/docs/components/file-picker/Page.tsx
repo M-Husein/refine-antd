@@ -54,7 +54,6 @@ export default function Page() {
         multiple
         maxCount={5}
         accept="image/*,video/*" // .pdf
-        maxBytes={5 * 1024 * 1024}
         pastable={pastable}
         webcam={webcam}
         webcamRecord={webcamRecord}

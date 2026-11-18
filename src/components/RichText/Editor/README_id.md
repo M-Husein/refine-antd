@@ -64,19 +64,19 @@ Membuka modal berisi [`FilePicker`](../../FilePicker/README_id.md): pilih, drop,
 
 ```tsx
 <Space>
-  <ImageControl pasteUrl webcam multiple maxBytes={2 * 1024 * 1024} />
+  <ImageControl pasteUrl webcam multiple />
 </Space>
 ```
 
 | Prop | Deskripsi |
 | --- | --- |
-| Props FilePicker | `pasteUrl`, `webcam`, `screenCapture`, `fetchUrl`, `urlTimeout`, `maxBytes`, `multiple`, `maxCount`, `accept` (default `image/*`), `pastable` (default `true`), `action`, `customRequest`, `beforeUpload`, `onChange`, `listType`, `hint`, `renderExtra`, ... |
+| Props FilePicker | `pasteUrl`, `webcam`, `screenCapture`, `fetchUrl`, `urlTimeout`, `multiple`, `maxCount`, `accept` (default `image/*`), `pastable` (default `true`), `action`, `customRequest`, `beforeUpload`, `onChange`, `listType`, `hint`, `renderExtra`, ... |
 | `getUrl(file)` | Mengubah `UploadFile` yang sudah diunggah menjadi `src` gambar. Default: respons bila berupa string, lalu `response.url` / `response.data.url`, lalu `file.url`. |
 | `modalTitle`, `modalProps` | Judul dan props tambahan antd Modal. |
 | Props Button | `icon`, `size`, `type`, `disabled`, `className`, ... diteruskan ke tombol pemicu. Nama yang sama dengan FilePicker (`disabled`, `className`, `style`, `type`, `children`) tetap bermakna **tombol**; `name` dan `onChange` ke picker. `disabled` berlaku untuk keduanya. |
 
 Asal gambar:
-- **Tanpa `action` / `customRequest`:** gambar disematkan sebagai **data URL** (base64). Sederhana, tetapi konten membesar sekitar 33% dari ukuran file, jadi atur `maxBytes` atau gunakan upload.
+- **Tanpa `action` / `customRequest`:** gambar disematkan sebagai **data URL** (base64). Sederhana, tetapi konten membesar sekitar 33% dari ukuran file, jadi validasi ukuran di `beforeUpload` atau gunakan upload.
 - **`action="/api/upload"`** (atau `customRequest`): file diunggah dan URL dibaca dari respons (`getUrl`).
 
 Perilaku: gambar dalam satu batch disisipkan bersamaan, sesuai urutan pemilihan, setelah tidak ada yang masih diunggah. Gambar disisipkan **setelah** gambar yang sedang terpilih, bukan menggantinya. Modal menutup bila semua berhasil dan tetap terbuka bila ada file gagal supaya error terlihat. `src` berskema `javascript:`, `vbscript:`, atau `data:` non-gambar ditolak.

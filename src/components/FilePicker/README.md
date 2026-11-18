@@ -2,7 +2,6 @@
 
 A thin wrapper around antd [`Upload.Dragger`](https://ant.design/components/upload). It keeps **every** `Upload` prop and behavior (drag & drop, `pastable`, `accept`, `maxCount`, `fileList`, `action`, `onChange`, ...) and adds:
 
-- `maxBytes` – per-file size limit
 - `webcam` – take a photo with the camera
 - `screenCapture` – capture a screenshot of a screen/window/tab
 - `webcamRecord` – record a video with the camera (and microphone)
@@ -22,7 +21,6 @@ import { FilePicker } from '@/components/FilePicker';
   multiple
   maxCount={5}
   accept="image/*,.pdf"
-  maxBytes={5 * 1024 * 1024}
   pastable
   webcam
   screenCapture
@@ -51,7 +49,6 @@ Inside a form (uploading is controlled by antd, so use `valuePropName`/`getValue
 
 | Prop            | Type                   | Description                                                                                           |
 | --------------- | ---------------------- | ----------------------------------------------------------------------------------------------------- |
-| `maxBytes`      | `number`               | Max size per file in bytes. Larger files are rejected with an error message and not added to the list. |
 | `webcam`        | `boolean`              | Show the "Take a photo" button. Auto-hidden if unsupported.                                           |
 | `screenCapture` | `boolean`              | Show the "Capture screen" button. Auto-hidden if unsupported.                                         |
 | `webcamRecord`  | `boolean`              | Show the "Record Video" button (camera + microphone). Auto-hidden if unsupported.                     |
@@ -60,7 +57,7 @@ Inside a form (uploading is controlled by antd, so use `valuePropName`/`getValue
 | `fetchUrl`      | `(url, signal) => Promise<Blob>` | Custom fetch for `pasteUrl`, e.g. through a backend proxy to get around CORS.               |
 | `urlTimeout`    | `number`               | Timeout of the URL fetch in ms. Default `15000`.                                                      |
 | `renderExtra`   | `() => ReactNode`      | Rendered next to the capture buttons.                                                                 |
-| `hint`          | `ReactNode`            | Text under the main text of the drop area. Defaults to the max size when `maxBytes` is set.           |
+| `hint`          | `ReactNode`            | Text under the main text of the drop area.                                                            |
 | `children`      | `ReactNode`            | Replaces the default content of the drop area.                                                        |
 | `pastable`      | `boolean` (antd)       | Paste files/images from the clipboard. Disabled automatically when `disabled`.                        |
 | `ref`           | `Ref<UploadRef>`       | Ref of the underlying antd `Upload` (`nativeElement`, `upload`). React 19: a regular prop, no `forwardRef`. |
@@ -91,9 +88,24 @@ Things to keep in mind:
 - Only enable `pastable` on **one** FilePicker per page, otherwise the same file is added to all of them.
 - If the FilePicker lives in a Modal/Drawer that is kept mounted, set `pastable={open}`.
 
-### `maxBytes`
-Checked inside `beforeUpload`. Your own `beforeUpload` is still called afterwards (with the possibly renamed file), so you can add further validation. Return `Upload.LIST_IGNORE` to reject a file.
+### File validation
+FilePicker only validates the file **type** (`accept`, also for files from the webcam, screen capture, recording and URL). It has no size or dimension limits of its own. Validate in your own `beforeUpload` (called with the possibly renamed file; return `Upload.LIST_IGNORE` to reject a file), for example:
 
+```tsx
+<FilePicker
+  beforeUpload={(file) => {
+    if (file.size > 5 * 1024 * 1024) {
+      message.error(`${file.name} is larger than 5 MB`);
+      return Upload.LIST_IGNORE;
+    }
+    return true;
+  }}
+/>
+```
+
+A dedicated validation module is planned, see [Future features](#future-features).
+
+### Pasted file names
 The `pasted-<timestamp>` rename applies to any file named `image.png`/`image.jpg`/... while `pastable` is on. If your `beforeUpload` returns `false` (no upload), antd keeps the original file, so the rename is not applied.
 
 ### Webcam & screen capture
@@ -111,17 +123,17 @@ The `pasted-<timestamp>` rename applies to any file named `image.png`/`image.jpg
 - **Countdown:** after pressing **Start Recording** (webcam or screen), a big 3 → 2 → 1 countdown is shown (like the Windows 11 Snipping Tool) before recording starts, which gives you time to get ready or switch to the window you want to record. **Cancel** during the countdown aborts it. If you share the current tab, the countdown overlay may appear in the first moments of the recording.
 - **Mirrored file:** a webcam recording is mirrored **inside the saved file** (not only in the preview). Frames are flipped on a `<canvas>` and the canvas is recorded together with the microphone audio. Screen recordings are never mirrored.
 - Format: the first supported of `video/webm;codecs=vp9,opus`, `vp8,opus`, `video/webm`, `video/mp4` (Safari). File name: `webcam-record-<timestamp>.webm` / `screen-record-<timestamp>.webm` (`.mp4` when the browser records mp4).
-- The result is a normal `File`, so it goes through `accept`, `maxBytes`, `maxCount`, `beforeUpload`, `action` and `onChange`. Make sure `accept` allows `video/*`, otherwise the recording is rejected.
+- The result is a normal `File`, so it goes through `accept`, `maxCount`, `beforeUpload`, `action` and `onChange`. Make sure `accept` allows `video/*`, otherwise the recording is rejected.
 - No microphone? A webcam recording continues without sound and a warning is shown. If the microphone is only denied, the browser denies camera and microphone together, so you get the "Permission denied." error.
 - If the user clicks the browser's "Stop sharing" while recording a screen, the recording is stopped and shown for review instead of being lost.
-- Limitations: a webcam recording freezes while the browser tab is hidden (the mirroring loop uses `requestAnimationFrame`), and `maxBytes` is only checked after the recording is finished.
+- Limitations: a webcam recording freezes while the browser tab is hidden (the mirroring loop uses `requestAnimationFrame`).
 
 ### From URL (`pasteUrl`)
 - The **From URL** button opens a modal with an input. Press **Enter** or **Add** to fetch the link. **Cancel**/close aborts a running request.
-- Flow: validate the URL (`http:`/`https:` only) → `fetch` with timeout (`urlTimeout`) → check `res.ok` → check `Content-Length` and the real size against `maxBytes` → check the type against `accept` → add as a `File`. It then goes through the normal antd pipeline (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
+- Flow: validate the URL (`http:`/`https:` only) → `fetch` with timeout (`urlTimeout`) → check `res.ok` → check the type against `accept` → add as a `File`. It then goes through the normal antd pipeline (`accept`, `maxCount`, `beforeUpload`, `action`, `onChange`).
 - File name: `Content-Disposition` header, else the last path segment of the URL, else `url-<timestamp>.<ext>`.
 - File type: the response `Content-Type`. When the server sends none (or `application/octet-stream`), it is guessed from the file extension.
-- Errors are shown inline in the modal: invalid URL, unsupported protocol, HTTP error (with status), timeout, type not accepted, too large, and network/CORS failure.
+- Errors are shown inline in the modal: invalid URL, unsupported protocol, HTTP error (with status), timeout, type not accepted, and network/CORS failure.
 - **CORS:** a cross-origin `fetch` only works when the server sends `Access-Control-Allow-Origin`. Otherwise the browser blocks reading the response and you get the "network/CORS" error. To support any link, pass `fetchUrl` and go through your own backend:
 
 ```tsx
@@ -149,11 +161,11 @@ An `http://` link cannot be fetched from an `https://` page (mixed content) and 
 
 Uses refine's `useTranslate` with English defaults. Keys:
 
-`filePicker.text`, `filePicker.orPaste`, `filePicker.maxSize` (`{{max}}`), `filePicker.tooLarge` (`{{name}}`, `{{max}}`), `filePicker.notAccepted`, `filePicker.webcam`, `filePicker.screenCapture`, `filePicker.capture`, `filePicker.retake`, `filePicker.use`, `filePicker.captureFailed`, `filePicker.permissionDenied`, `buttons.cancel`.
+`filePicker.text`, `filePicker.orPaste`, `filePicker.notAccepted`, `filePicker.webcam`, `filePicker.screenCapture`, `filePicker.capture`, `filePicker.retake`, `filePicker.use`, `filePicker.captureFailed`, `filePicker.permissionDenied`, `buttons.cancel`.
 
 Recording: `filePicker.webcamRecord`, `filePicker.screenRecord`, `filePicker.startRecording`, `filePicker.stopRecording`, `filePicker.noMicrophone`, `filePicker.recordNotSupported`.
 
-From URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`, `filePicker.urlInvalid`, `filePicker.urlProtocol`, `filePicker.urlHttp` (`{{status}}`), `filePicker.urlTimeout`, `filePicker.urlTooLarge` (`{{max}}`), `filePicker.urlTooLargeNoMax`, `filePicker.urlNetwork`.
+From URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`, `filePicker.urlInvalid`, `filePicker.urlProtocol`, `filePicker.urlHttp` (`{{status}}`), `filePicker.urlTimeout`, `filePicker.urlNetwork`.
 
 ## Notes
 
@@ -165,6 +177,33 @@ From URL: `filePicker.fromUrl`, `filePicker.fetch`, `filePicker.urlPlaceholder`,
 ## Future features
 
 > Planned / optional. **Not implemented**, so the API below may change.
+
+### File validation module (separate from FilePicker)
+
+`maxBytes` was **removed** from FilePicker on purpose. Specific file validation will live in a **separate function/module** that can be used with any `Upload`/FilePicker, instead of growing the number of FilePicker props.
+
+Planned rules:
+- Size: `maxBytes` / `minBytes`.
+- Image: `maxWidth` / `minWidth` / `maxHeight` / `minHeight` (and optionally aspect ratio).
+- Video: the same dimension limits, plus `maxDuration` / `minDuration`.
+- Possibly: extension/MIME allow-list, file name pattern.
+
+Design notes (proposal):
+- Every source (disk, drag & drop, paste, webcam, screen capture, recording, URL) goes through `beforeUpload`, so one validator covers them all.
+- Composable validators that return `beforeUpload`-compatible results (`true` / `Upload.LIST_IGNORE` / rejected promise) and report errors with an i18n message.
+- Dimensions and duration are read asynchronously from the file (`Image` / `<video>` metadata via an object URL, revoked afterwards), so validators are async.
+
+Sketch (not final):
+
+```tsx
+<FilePicker
+  beforeUpload={createFileValidator([
+    maxBytes(5 * 1024 * 1024),
+    imageSize({ minWidth: 200, maxWidth: 4000, minHeight: 200 }),
+    videoDuration({ maxSeconds: 60 }),
+  ])}
+/>
+```
 
 ### Global paste of URLs (phase 2 of `pasteUrl`)
 

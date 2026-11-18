@@ -1,4 +1,4 @@
-import type { ControllerProps } from 'react-hook-form'; // , FieldError, FieldErrors
+import type { ControllerProps, FieldError } from 'react-hook-form';
 import { Controller, get } from 'react-hook-form';
 
 type InputRenderFunction = (props: any) => React.ReactElement;
@@ -43,8 +43,9 @@ export const Field = ({
   const myId = id || name;
   const errorAriaDescribeBy = myId + "_err";
   
-  // RHF's get helper safely parses dot-notation paths like "posts.0.title"
-  const fixError = get(error, name);
+  // RHF's get helper safely parses dot-notation paths like "posts.0.title".
+  // Since RHF 7.92 `get` returns `unknown`, so give the result an explicit type.
+  const fixError = get(error, name) as FieldError | undefined;
 
   // console.log({ fixError, error });
 
