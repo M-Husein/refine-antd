@@ -114,6 +114,34 @@ Serialisasi Markdown tidak menghilangkan informasi: hal yang tidak bisa diekspre
 - Memakai class CSS `rte-*` (`../styles`); `mathlive/static.css` di-import oleh komponen.
 - `core/nodes/CodeBlock/languages.generated.ts` di-generate dari `@codemirror/language-data` (143 bahasa). Generate ulang jika daftar di package tersebut berubah.
 
+## Fitur mendatang
+
+> Direncanakan / opsional. **Belum diimplementasi**, jadi detail di bawah bisa berubah.
+
+### Lebar gambar disimpan sebagai angka (persen)
+
+Saat ini atribut `width` gambar berupa string CSS (`"50%"`, `"480px"`), dan handle resize, preset ukuran, Slider, serta input "Custom Width" masing-masing menulisnya dengan cara sendiri. Idenya: simpan **satu angka, persen 1 sampai 100**, dan bentuk string CSS hanya saat render.
+
+Alasan:
+- Slider dan InputNumber terhubung langsung ke atribut, tanpa `parseFloat` / `formatter` / `parser`.
+- Cukup satu validasi (bilangan bulat 1 sampai 100). Angka tidak bisa membawa CSS, jadi dokumen tidak lagi bisa menyelundupkan `50%; position:fixed` atau `50%" onerror=...` ke atribut `style` di HTML/Markdown.
+- Keluaran HTML dan Markdown selalu valid (`width: 50%`), dan nilai tanpa satuan seperti `"480"` tidak lagi hilang.
+
+Catatan desain:
+- **Data lama.** Sebelum perubahan ini `width` berupa angka **piksel** (`width: 480`, `width="480"`), sehingga `480` tiba-tiba berarti 480%. Pembacaan harus lewat satu fungsi toleran, dipakai oleh `ImageFigure`, `renderHTML`, dan `markdown.ts` (Tiptap tidak menjalankan `parseHTML` saat memuat JSON, jadi sisi render juga harus menormalkan):
+  ```ts
+  toPercent(value): number | null
+  // number 1..100     -> value (dibulatkan)
+  // "50%"             -> 50
+  // px, > 100, NaN    -> null  (ukuran asli, tidak ada yang rusak)
+  ```
+  Lebar px tidak bisa diubah menjadi persen tanpa mengetahui lebar kontainer, jadi jatuh ke ukuran asli. Tulis ini di catatan migrasi.
+- **Satu titik konversi.** `` width ? `${toPercent(width)}%` : "fit-content" `` hanya di renderer; semua penulis (handle, preset, Slider, InputNumber) menyimpan bilangan bulat.
+- **Nama atribut.** Tetap `width` dan dokumentasikan bahwa isinya persen, atau ganti menjadi `widthPercent`. Mengganti nama menghilangkan ambiguitas dengan nilai piksel lama, tetapi migrasinya lebih besar.
+- **Selalu dibulatkan.** Simpan bilangan bulat, supaya tidak muncul nilai seperti `33.3333`.
+- **Slider.** `onChange` menyala di setiap gerakan dan membuat satu transaksi per gerakan (seperti handle resize). Simpan nilai lokal untuk pratinjau langsung dan commit di `onChangeComplete`; tampilkan nilainya dengan `` tooltip={{ formatter: (v) => `${v}%` }} ``.
+- **Batas.** Maksimum 100 berarti gambar tidak pernah lebih lebar dari kontainernya. Ini disengaja.
+
 ## Struktur
 
 ```

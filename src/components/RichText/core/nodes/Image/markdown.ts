@@ -1,33 +1,14 @@
-/**
- * Pure JSON -> Markdown/HTML serialization for `image`/`imageInline`
- * nodes (spec 19.12/19.13), plus a reusable `describeImageForMarkdown`
- * that the Link serializer (src/editor/content/link-markdown.ts) composes
- * with to implement "Image Inside Link" (see markdown_link_spec) —
- * the Link+Image combination must be decided jointly, not by serializing
- * each independently and gluing the strings together.
- */
-
 import type { JSONContent } from "@tiptap/core";
 import type { MarkdownRepresentation } from "@/components/RichText/core/types";
 
 export interface ImageMarkdownInfo {
-  /** True if every attribute present can be represented in native Markdown. */
   isSimple: boolean;
-  /** `![alt](src)` or `![alt](src "title")` — only meaningful when isSimple. */
   nativeSyntax: string;
-  /** A standalone `<img ...>` tag carrying every attribute, for HTML fallback. */
   htmlImgTag: string;
 }
 
 const escapeAlt = (s: string) => s.replace(/[[\]]/g, "\\$&");
 
-/**
- * Shared capability check for both the `image` (block/float) and
- * `imageInline` node shapes. `src`/`alt`/`title` are native-Markdown
- * compatible (CommonMark's `![alt](src "title")` syntax); anything else
- * present (width/height/caption/align/displayMode !== defaults/
- * verticalAlign !== baseline) forces HTML (RULE 9/10).
- */
 export const describeImageForMarkdown = (attrs: JSONContent["attrs"]): ImageMarkdownInfo => {
   const {
     src,
@@ -53,15 +34,19 @@ export const describeImageForMarkdown = (attrs: JSONContent["attrs"]): ImageMark
     ? `![${escapeAlt(alt ?? "")}](${src ?? ""} "${title}")`
     : `![${escapeAlt(alt ?? "")}](${src ?? ""})`;
 
+  const styles = [
+    "max-width: 100%",
+    "height: auto",
+    width ? `width: ${width}` : "",
+    height ? `height: ${height}` : "",
+    verticalAlign && verticalAlign !== "baseline" ? `vertical-align: ${verticalAlign}` : "",
+  ].filter(Boolean).join("; ");
+
   const imgAttrPairs = [
     `src="${src ?? ""}"`,
     `alt="${alt ?? ""}"`,
     title ? `title="${title}"` : "",
-    width ? `width="${width}"` : "",
-    height ? `height="${height}"` : "",
-    verticalAlign && verticalAlign !== "baseline"
-      ? `style="vertical-align:${verticalAlign}"`
-      : "",
+    styles ? `style="${styles}"` : "",
   ]
     .filter(Boolean)
     .join(" ");
