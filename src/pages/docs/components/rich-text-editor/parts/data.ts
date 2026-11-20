@@ -178,7 +178,7 @@ export const initialJson: JSONContent = {
 /** The same document as `initialJson`, as the Editor serializes it with `format="markdown"`. */
 export const initialMarkdown = `# Tiptap \\+ Ant Design RTE — full feature demo
 
-Phases 1–3 \\(marks, lists, links\\) plus 4–6 \\(table, image, video, audio, embed\\) are all wired up below\\. Try **editing**, _formatting_, inserting media, or flipping to the read\\-only viewer with the toggle above\\.
+Phases 1-3 \\(marks, lists, links\\) plus 4-6 \\(table, image, video, audio, embed\\) are all wired up below\\. Try **editing**, _formatting_, inserting media, or flipping to the read\\-only viewer with the toggle above\\.
 
 ## Heading 2
 
