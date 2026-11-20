@@ -1,4 +1,5 @@
 import { Node, mergeAttributes, type CommandProps } from "@tiptap/core";
+import type { DOMOutputSpec } from "@tiptap/pm/model";
 import type { ImageAlign, ImageDisplayMode, ImageVerticalAlign } from "./types";
 // import { styleAttrs } from "@/components/RichText/core/content/style-attr";
 
@@ -72,7 +73,10 @@ export const Image = Node.create({
   isolating: true,
   marks: "link",
   addAttributes() {
-    const noRender = { renderHTML: () => ({}), parseHTML: () => null };
+    const noRender = { 
+      renderHTML: () => ({}), 
+      parseHTML: () => null 
+    };
     return {
       src: { default: null, ...noRender },
       alt: { default: null, ...noRender },
@@ -86,8 +90,8 @@ export const Image = Node.create({
         },
       },
       captionAlign: {
-        default: "center",
-        parseHTML: (element) => element.querySelector("figcaption")?.style.textAlign || "center",
+        default: "left",
+        parseHTML: (element) => element.querySelector("figcaption")?.style.textAlign || "left",
         renderHTML: (attributes) => {
           if (!attributes.captionAlign) return {};
           return { "data-caption-align": attributes.captionAlign };
@@ -105,8 +109,7 @@ export const Image = Node.create({
     return [
       {
         tag: "figure[data-rte-image]",
-        getAttrs: (el) => {
-          const figure = el as HTMLElement;
+        getAttrs: (figure: HTMLElement) => {
           const img = figure.querySelector("img");
           const figcaption = figure.querySelector("figcaption");
           if (!img) return false;
@@ -124,8 +127,7 @@ export const Image = Node.create({
       },
       {
         tag: "img[src]",
-        getAttrs: (el) => {
-          const node = el as HTMLElement;
+        getAttrs: (node: HTMLElement) => {
           if (node.hasAttribute("data-rte-inline")) return false;
           if (!isSoleBlockContent(node)) return false;
           return {
@@ -145,7 +147,7 @@ export const Image = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     const { src, alt, title, caption, captionAlign, align, displayMode, width, height } = node.attrs;
     
-    // 1. Style untuk figure kontainer (mengatur lebar dan perataan)
+    // 1. Style for the figure container (controls width and alignment)
     const widthStyle = width ? `width: ${width};` : "width: fit-content; max-width: 100%;";
     const alignmentMargins = 
       align === "center"
@@ -156,7 +158,7 @@ export const Image = Node.create({
 
     const figureStyle = [widthStyle, alignmentMargins].filter(Boolean).join(" ");
 
-    // 2. Style untuk tag img di dalam figure
+    // 2. Style for the img tag inside the figure
     const imgStyle = [
       "width: 100%;",
       "max-width: 100%;",
@@ -164,7 +166,7 @@ export const Image = Node.create({
       height ? `height: ${height};` : "",
     ].filter(Boolean).join(" ");
 
-    const img = [
+    const img: DOMOutputSpec = [
       "img",
       mergeAttributes({
         src,
@@ -174,20 +176,25 @@ export const Image = Node.create({
       }),
     ];
 
-    // 3. Mengembalikan struktur HTML: figure > [img, editorOverlay?, figcaption?]
+    // Optional caption, rendered after the image
+    const figcaption: DOMOutputSpec[] = caption
+      ? [["figcaption", { style: `text-align: ${captionAlign || "left"};` }, caption]]
+      : [];
+
+    // 3. Return the HTML structure: figure > [img, figcaption?]
+    //    (editor-only overlays such as resize handles belong to the NodeView, not to this output)
     return [
       "figure",
       mergeAttributes(HTMLAttributes, {
         "data-rte-image": "",
         "data-align": align,
         "data-display-mode": displayMode,
-        "data-caption-align": captionAlign || "center",
+        "data-caption-align": captionAlign || "left",
         style: figureStyle,
       }),
-      img as any,
-      // ---> TEMPATKAN DI SINI (di dalam array utama renderHTML) <---
-      ...(caption ? [["figcaption", { style: `text-align: ${captionAlign || "center"};` }, caption]] : []),
-    ] as any;
+      img,
+      ...figcaption,
+    ];
   },
 
   addCommands() {
@@ -212,7 +219,10 @@ export const ImageInline = Node.create({
   marks: "link",
 
   addAttributes() {
-    const noRender = { renderHTML: () => ({}), parseHTML: () => null };
+    const noRender = { 
+      renderHTML: () => ({}), 
+      parseHTML: () => null 
+    };
     return {
       src: { default: null, ...noRender },
       alt: { default: null, ...noRender },
@@ -225,8 +235,7 @@ export const ImageInline = Node.create({
     return [
       {
         tag: "img[src]",
-        getAttrs: (el) => {
-          const node = el as HTMLElement;
+        getAttrs: (node: HTMLElement) => {
           const explicit = node.hasAttribute("data-rte-inline");
           if (!explicit && isSoleBlockContent(node)) return false;
           return {
@@ -240,7 +249,7 @@ export const ImageInline = Node.create({
     ];
   },
 
-  renderHTML({ node }) {
+  renderHTML({ node }): DOMOutputSpec {
     const { src, alt, width, verticalAlign } = node.attrs;
     const imgStyle = [
       "max-width: 100%;",
@@ -257,7 +266,7 @@ export const ImageInline = Node.create({
         "data-rte-inline": "",
         style: imgStyle,
       }),
-    ] as any;
+    ];
   },
 
   addCommands() {

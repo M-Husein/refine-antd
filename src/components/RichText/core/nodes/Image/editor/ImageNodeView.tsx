@@ -49,11 +49,11 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
     [updateAttributes]
   );
 
-  const changeAlign = (align: ImageAlign) => {
-    updateAttributes({ align });
+  const changeWithDropdownEffect = (attr: Record<string, unknown>) => {
+    updateAttributes(attr);
     setOpen(false);
     setTimeout(() => setOpen(true), 0);
-  }
+  };
 
   const overlay = selected ? (
     <>
@@ -80,21 +80,19 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
                     type={(align ?? "left") === "left" ? "primary" : "default"}
                     icon={<AlignLeftOutlined />}
                     // onClick={() => updateAttributes({ align: "left" as ImageAlign })}
-                    onClick={() => changeAlign("left")}
+                    onClick={() => changeWithDropdownEffect({ align: "left" as ImageAlign })}
                   />
                   <Button
                     size="small"
                     type={align === "center" ? "primary" : "default"}
                     icon={<AlignCenterOutlined />}
-                    // onClick={() => updateAttributes({ align: "center" as ImageAlign })}
-                    onClick={() => changeAlign("center")}
+                    onClick={() => changeWithDropdownEffect({ align: "center" as ImageAlign })}
                   />
                   <Button
                     size="small"
                     type={align === "right" ? "primary" : "default"}
                     icon={<AlignRightOutlined />}
-                    // onClick={() => updateAttributes({ align: "right" as ImageAlign })}
-                    onClick={() => changeAlign("right")}
+                    onClick={() => changeWithDropdownEffect({ align: "right" as ImageAlign })}
                   />
                 </Space.Compact>
               </div>
@@ -107,7 +105,7 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
                   key={mode}
                   size="small"
                   type={(displayMode ?? "block") === mode ? "primary" : "default"}
-                  onClick={() => updateAttributes({ displayMode: mode })}
+                  onClick={() => changeWithDropdownEffect({ displayMode: mode })}
                 >
                   {mode}
                 </Button>
@@ -123,7 +121,7 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
                     key={p}
                     size="small"
                     type={width === p ? "primary" : "default"}
-                    onClick={() => updateAttributes({ width: p })}
+                    onClick={() => changeWithDropdownEffect({ width: p })}
                   >
                     {p}
                   </Button>
@@ -131,7 +129,7 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
                 <Button
                   size="small"
                   danger={!width}
-                  onClick={() => updateAttributes({ width: null })}
+                  onClick={() => changeWithDropdownEffect({ width: null })}
                 >
                   Reset
                 </Button>
@@ -176,19 +174,19 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
                   <Space.Compact>
                     <Button
                       size="small"
-                      type={(captionAlign ?? "center") === "left" ? "primary" : "default"}
+                      type={(captionAlign ?? "left") === "left" ? "primary" : "default"}
                       icon={<AlignLeftOutlined />}
                       onClick={() => updateAttributes({ captionAlign: "left" as ImageAlign })}
                     />
                     <Button
                       size="small"
-                      type={(captionAlign ?? "center") === "center" ? "primary" : "default"}
+                      type={(captionAlign ?? "left") === "center" ? "primary" : "default"}
                       icon={<AlignCenterOutlined />}
                       onClick={() => updateAttributes({ captionAlign: "center" as ImageAlign })}
                     />
                     <Button
                       size="small"
-                      type={(captionAlign ?? "center") === "right" ? "primary" : "default"}
+                      type={(captionAlign ?? "left") === "right" ? "primary" : "default"}
                       icon={<AlignRightOutlined />}
                       onClick={() => updateAttributes({ captionAlign: "right" as ImageAlign })}
                     />

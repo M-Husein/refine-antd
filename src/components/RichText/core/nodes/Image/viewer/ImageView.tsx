@@ -14,6 +14,7 @@ export const imageNodeRenderers: Record<string, NodeRenderer> = {
       alt={node.attrs?.alt}
       title={node.attrs?.title}
       caption={node.attrs?.caption}
+      captionAlign={node.attrs?.captionAlign}
       displayMode={node.attrs?.displayMode}
       align={node.attrs?.align}
       width={node.attrs?.width}

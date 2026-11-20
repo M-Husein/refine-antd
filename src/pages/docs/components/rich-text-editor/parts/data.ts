@@ -157,7 +157,7 @@ export const initialJson: JSONContent = {
         src: "https://picsum.photos/id/1015/640/360",
         alt: "Mountain river",
         caption: "Block image with a caption (Phase 5)",
-        align: "center",
+        align: "left",
         displayMode: "block",
         // width: 480,
       },
@@ -241,7 +241,7 @@ Line two.
 | 4 | Table | Done |
 | 5 | Image | Done |
 
-<figure data-rte-image data-align="center" data-display-mode="block"><img src="https://picsum.photos/id/1015/640/360" alt="Mountain river"/><figcaption>Block image with a caption (Phase 5)</figcaption></figure>
+<figure data-rte-image data-align="left" data-display-mode="block"><img src="https://picsum.photos/id/1015/640/360" alt="Mountain river"/><figcaption>Block image with a caption (Phase 5)</figcaption></figure>
 
 <div class="rte-embed"><iframe data-rte-embed data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" data-provider="youtube" title="Sample embed (Phase 6)" style="width:100%;height:100%;border:0"></iframe></div>
 `;
