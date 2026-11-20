@@ -36,28 +36,28 @@ export const ImageFigure = ({
   className,
   ...etc
 }: ImageFigureProps) => {
-  // Jika width diisi, gunakan nilainya. Jika tidak, gunakan fit-content dengan max-width 100%.
-  const widthStyle = width ? { width } : { width: "fit-content", maxWidth: "100%" };
+  // If a width is provided, use that value. Otherwise, use fit-content with a max-width of 100%.
+  const widthStyle = width ? { width } : { width: 'fit-content', maxWidth: '100%' };
 
-  // Perataan horizontal yang konsisten baik selected maupun unselected
+  // Consistent horizontal alignment for both selected and unselected states
   const alignmentMargins: CSSProperties = 
     align === "center"
-      ? { marginLeft: "auto", marginRight: "auto" }
+      ? { marginLeft: 'auto', marginRight: 'auto' }
       : align === "right"
-        ? { marginLeft: "auto", marginRight: 0 }
-        : { marginLeft: 0, marginRight: "auto" };
+        ? { marginLeft: 'auto', marginRight: 0 }
+        : { marginLeft: 0, marginRight: 'auto' };
 
   const figureStyle: CSSProperties =
     displayMode === "float-left"
-      ? { float: "left", margin: "0 1rem 1rem 0", ...widthStyle }
+      ? { float: 'left', margin: '0 1rem 1rem 0', ...widthStyle }
       : displayMode === "float-right"
-        ? { float: "right", margin: "0 0 1rem 1rem", ...widthStyle }
+        ? { float: 'right', margin: '0 0 1rem 1rem', ...widthStyle }
         : {
-            display: "flex",
-            flexDirection: "column",
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: alignToJustify[align],
             ...widthStyle,
-            maxWidth: "100%",
+            maxWidth: '100%',
             ...alignmentMargins,
           };
 
@@ -69,9 +69,7 @@ export const ImageFigure = ({
 
   return (
     <figure
-      className={["rte-image", "rte-image--" + displayMode, className]
-        .filter(Boolean)
-        .join(" ")}
+      className={`rte-image rte-image--${displayMode} ${className || ''}`}
       style={figureStyle}
       data-align={align}
     >
@@ -106,21 +104,25 @@ export const ImageInlineSpan = ({
   editorOverlay,
   className,
 }: ImageInlineSpanProps) => {
-  const imgStyle: CSSProperties = {
-    maxWidth: "100%",
-    height: "auto",
-    ...(width ? { width } : {}),
-    ...(verticalAlign && verticalAlign !== "baseline" ? { verticalAlign } : {}),
-  };
+  // const imgStyle: CSSProperties = {
+  //   // maxWidth: '100%',
+  //   // height: 'auto',
+  //   ...(width ? { width } : {}),
+  //   ...(verticalAlign && verticalAlign !== "baseline" ? { verticalAlign } : {}),
+  // };
 
   return (
-    <span
-      className={["rte-image-inline relative inline-block", className].filter(Boolean).join(" ")}
-    >
+    <span className={"rte-image-inline relative inline-block " + (className || "")}>
       <img
         src={src}
         alt={alt}
-        style={imgStyle}
+        style={{
+          // maxWidth: '100%',
+          // height: 'auto',
+          ...(width ? { width } : {}),
+          ...(verticalAlign && verticalAlign !== "baseline" ? { verticalAlign } : {}),
+        }}
+        className="max-w-full h-auto"
       />
       {editorOverlay}
     </span>
