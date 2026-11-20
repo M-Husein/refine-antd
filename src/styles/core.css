@@ -11,23 +11,19 @@
   border: 0 solid #d9d9d9;
 }
 
-html {
-  /* 
-    scrollbar-width: thin; 
-  */
-
-  /*
-    stable
-    Prevent unneeded layout changes as the content growing or shrinking 
-    causes the scrollbar to appear/disappear, a space is reserved for it.
-    
-    stable both-edges
-    Add symmetric spacing to both sides of the box so the content is centered.
-    
-    https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scrollbar-gutter
-  */
+/*
+  stable
+  Prevent unneeded layout changes as the content growing or shrinking 
+  causes the scrollbar to appear/disappear, a space is reserved for it.
+  
+  stable both-edges
+  Add symmetric spacing to both sides of the box so the content is centered.
+  
+  https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scrollbar-gutter
+*/
+/* html {
   scrollbar-gutter: stable;
-}
+} */
 
 body {
   margin: 0;
@@ -36,7 +32,7 @@ body {
     Use this when html scrollbar-gutter: stable | stable both-edges (check code above)
     Because antd Modal open added html body { width: calc(100% - 15px) }
   */
-  min-width: 100%;
+  /* min-width: 100%; */
 
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
