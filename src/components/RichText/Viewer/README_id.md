@@ -31,6 +31,10 @@ Tanpa `preset`, Viewer hanya merender node core (paragraf, heading, list, link, 
 
 `createViewerPreset({ allowedCustomOrigins })` mengembalikan `{ extensions, nodeRenderers }`. Pakai `allowedCustomOrigins` yang sama dengan Editor (lihat "Keamanan embed" di [README Editor](../Editor/README_id.md)).
 
+## Lebar responsif gambar
+
+Gambar bisa membawa lebar per rentang (`responsive`, lihat "Lebar responsif gambar" di [README Editor](../Editor/README_id.md)). Viewer merendernya dengan CSS yang sama (`styles/content.css`), yang menjadikan root `.rte-viewer` sebuah size container bernama (`rte`, `container-type: inline-size`). Itu membutuhkan lebar pasti: stylesheet menyetel `width: 100%`; jangan menaruh Viewer di dalam `inline-block` atau flex item dengan lebar auto.
+
 ## Bundle
 
 Viewer tidak meng-import statis `@tiptap/react`, ProseMirror state/view, `mathlive`, `@ant-design/icons`, atau CodeMirror. Syntax highlighting memuat `@codemirror/language-data` dan `@lezer/highlight` secara lazy lewat `import()`. Pertahankan: halaman yang hanya menampilkan konten tidak boleh mengunduh editor. Import dari `@/components/RichText/Viewer`, jangan dari barrel yang juga mengekspor `Editor`.

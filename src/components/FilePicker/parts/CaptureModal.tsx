@@ -255,7 +255,7 @@ export const CaptureModal = ({
         clearCountdown();
         startRecording();
       }
-    }, 1000);
+    }, 1e3);
   };
 
   const retakeVideo = () => {
@@ -334,7 +334,7 @@ export const CaptureModal = ({
       open={!!kind}
       onCancel={onClose}
       centered
-      width={720}
+      width={725}
       title={
         kind === 'webcam'
           ? t('filePicker.webcam', 'Take a photo')
@@ -344,11 +344,6 @@ export const CaptureModal = ({
           ? t('filePicker.screenCapture', 'Capture screen')
           : t('filePicker.screenRecord', 'Record Screen')
       }
-      // styles={{
-      //   body: {
-      //     margin: '0 -24px',
-      //   }
-      // }}
       classNames={{
         body: "-mx-6 relative"
       }}

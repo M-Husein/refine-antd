@@ -31,6 +31,10 @@ Without `preset` the Viewer only renders the core nodes (paragraphs, headings, l
 
 `createViewerPreset({ allowedCustomOrigins })` returns `{ extensions, nodeRenderers }`. Use the same `allowedCustomOrigins` as the Editor (see "Embed security" in the [Editor README](../Editor/README.md)).
 
+## Responsive image width
+
+Images can carry per-range widths (`responsive`, see "Image responsive width" in the [Editor README](../Editor/README.md)). The Viewer renders them with the same CSS (`styles/content.css`), which makes the `.rte-viewer` root a named size container (`rte`, `container-type: inline-size`). That needs a definite width: the stylesheet sets `width: 100%`; do not place the Viewer in an `inline-block` or an auto-width flex item.
+
 ## Bundle
 
 The Viewer does not statically import `@tiptap/react`, ProseMirror state/view, `mathlive`, `@ant-design/icons` or CodeMirror. Code highlighting loads `@codemirror/language-data` and `@lezer/highlight` lazily with `import()`. Keep it that way: a page that only displays content should not download the editor. Import from `@/components/RichText/Viewer`, never from a barrel that also exports `Editor`.

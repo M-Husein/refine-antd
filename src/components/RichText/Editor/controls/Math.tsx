@@ -1,11 +1,13 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { Button, Modal, Segmented, type ButtonProps } from "antd";
 import { FunctionOutlined } from "@ant-design/icons";
 import "mathlive";
 import type { MathfieldElement } from "mathlive";
 import { useRichTextEditor } from "../Context";
 
-export interface MathProps extends Omit<ButtonProps, "onClick"> {}
+export interface MathProps extends Omit<ButtonProps, "onClick"> {
+  ref?: Ref<HTMLButtonElement>;
+}
 
 /**
  * Editor control — opens a modal with a live MathLive `<math-field>` for
@@ -19,7 +21,7 @@ export interface MathProps extends Omit<ButtonProps, "onClick"> {}
  * colliding with the global `Math` object happens at the editor-entry.ts
  * export boundary, same as `Image as ImageControl` etc.
  */
-export const Math = forwardRef<HTMLButtonElement, MathProps>((props, ref) => {
+export const Math = (props: MathProps) => {
   const editor = useRichTextEditor();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"inline" | "block">("inline");
@@ -45,7 +47,9 @@ export const Math = forwardRef<HTMLButtonElement, MathProps>((props, ref) => {
   }, [open, containerEl]);
 
   useEffect(() => {
-    if (fieldRef.current) fieldRef.current.defaultMode = mode === "block" ? "math" : "inline-math";
+    if (fieldRef.current) {
+      fieldRef.current.defaultMode = mode === "block" ? "math" : "inline-math";
+    }
   }, [mode]);
 
   if (!editor) return null;
@@ -64,8 +68,18 @@ export const Math = forwardRef<HTMLButtonElement, MathProps>((props, ref) => {
 
   return (
     <>
-      <Button ref={ref} icon={<FunctionOutlined />} onClick={() => setOpen(true)} {...props} />
-      <Modal title="Insert math" open={open} onCancel={() => setOpen(false)} onOk={apply}>
+      <Button 
+        {...props} 
+        // ref={ref} 
+        icon={<FunctionOutlined />} 
+        onClick={() => setOpen(true)} 
+      />
+      <Modal 
+        title="Insert math" 
+        open={open} 
+        onCancel={() => setOpen(false)} 
+        onOk={apply}
+      >
         <Segmented
           value={mode}
           onChange={(v) => setMode(v as "inline" | "block")}
@@ -82,6 +96,6 @@ export const Math = forwardRef<HTMLButtonElement, MathProps>((props, ref) => {
       </Modal>
     </>
   );
-});
+};
 
-Math.displayName = "Math";
+// Math.displayName = "Math";

@@ -1,16 +1,19 @@
-import { forwardRef } from "react";
+import { type Ref } from "react";
 import { Button, type ButtonProps } from "antd";
 import { ItalicOutlined } from "@ant-design/icons";
 import { useRichTextEditor } from "../Context";
 
-export interface ItalicProps extends Omit<ButtonProps, "onClick"> {}
+export interface ItalicProps extends Omit<ButtonProps, "onClick"> {
+  ref?: Ref<HTMLButtonElement>;
+}
 
-export const Italic = forwardRef<HTMLButtonElement, ItalicProps>((props, ref) => {
+/** Editor control — toggles the italic mark. */
+export const Italic = (props: ItalicProps) => {
   const editor = useRichTextEditor();
   if (!editor) return null;
   return (
     <Button
-      ref={ref}
+      // ref={ref}
       type={editor.isActive("italic") ? "primary" : "default"}
       icon={<ItalicOutlined />}
       disabled={!editor.can().chain().focus().toggleItalic().run()}
@@ -18,6 +21,6 @@ export const Italic = forwardRef<HTMLButtonElement, ItalicProps>((props, ref) =>
       {...props}
     />
   );
-});
+};
 
-Italic.displayName = "Italic";
+// Italic.displayName = "Italic";

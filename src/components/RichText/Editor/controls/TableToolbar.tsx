@@ -162,30 +162,52 @@ export const TableToolbar = ({ className }: TableToolbarProps) => {
     else if (key === "cell") chain.toggleHeaderCell().run();
   };
 
-  const dropdownProps = { getPopupContainer, trigger: ["click"] as ("click")[] };
+  const dropdownProps = { 
+    getPopupContainer, 
+    trigger: ["click"] as ("click")[] 
+  };
 
   return (
     <BubbleMenu
       ref={menuRef}
       editor={editor}
       pluginKey="tableToolbar"
-      className={["rte-table-toolbar", className].filter(Boolean).join(" ")}
+      // className={["rte-table-toolbar", className].filter(Boolean).join(" ")}
+      className={"rte-table-toolbar " + (className || "")}
       shouldShow={shouldShow}
       getReferencedVirtualElement={getReferencedVirtualElement}
       options={options}
       updateDelay={0}
     >
-      <Dropdown menu={{ items: rowItems, onClick: onRow }} {...dropdownProps}>
+      <Dropdown 
+        menu={{ 
+          items: rowItems, 
+          onClick: onRow 
+        }} 
+        {...dropdownProps}
+      >
         <Button size="small" type="text" icon={<InsertRowBelowOutlined />}>
           Row <DownOutlined />
         </Button>
       </Dropdown>
-      <Dropdown menu={{ items: colItems, onClick: onCol }} {...dropdownProps}>
+      <Dropdown 
+        menu={{ 
+          items: colItems, 
+          onClick: onCol 
+        }} 
+        {...dropdownProps}
+      >
         <Button size="small" type="text" icon={<InsertRowRightOutlined />}>
           Column <DownOutlined />
         </Button>
       </Dropdown>
-      <Dropdown menu={{ items: mergeItems, onClick: onMerge }} {...dropdownProps}>
+      <Dropdown 
+        menu={{ 
+          items: mergeItems, 
+          onClick: onMerge 
+        }} 
+        {...dropdownProps}
+      >
         <Button
           size="small"
           type="text"
@@ -195,7 +217,13 @@ export const TableToolbar = ({ className }: TableToolbarProps) => {
           Merge <DownOutlined />
         </Button>
       </Dropdown>
-      <Dropdown menu={{ items: headerItems, onClick: onHeader }} {...dropdownProps}>
+      <Dropdown 
+        menu={{ 
+          items: headerItems, 
+          onClick: onHeader 
+        }} 
+        {...dropdownProps}
+      >
         <Button size="small" type="text" icon={<BorderOuterOutlined />}>
           Header <DownOutlined />
         </Button>
@@ -213,4 +241,4 @@ export const TableToolbar = ({ className }: TableToolbarProps) => {
   );
 };
 
-TableToolbar.displayName = "TableToolbar";
+// TableToolbar.displayName = "TableToolbar";

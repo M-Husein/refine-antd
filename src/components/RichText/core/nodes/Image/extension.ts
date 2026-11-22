@@ -1,6 +1,13 @@
 import { Node, mergeAttributes, type CommandProps } from "@tiptap/core";
 import type { DOMOutputSpec } from "@tiptap/pm/model";
-import type { ImageAlign, ImageDisplayMode, ImageVerticalAlign } from "./types";
+import type { ImageAlign, ImageDisplayMode, ImageResponsive, ImageVerticalAlign } from "./types";
+import { normalizeWidth } from "./size";
+import {
+  normalizeResponsive,
+  parseResponsiveFromElement,
+  responsiveDataAttrs,
+  responsiveStyleVars,
+} from "./responsive";
 // import { styleAttrs } from "@/components/RichText/core/content/style-attr";
 
 const MARK_WRAPPER_TAGS = new Set(["A", "STRONG", "EM", "U", "S", "CODE"]);
@@ -52,6 +59,7 @@ declare module "@tiptap/core" {
         align?: ImageAlign;
         width?: string | null;
         height?: string | null;
+        responsive?: ImageResponsive | null;
       }) => ReturnType;
       updateImage: (attrs: Record<string, unknown>) => ReturnType;
     };
@@ -113,15 +121,25 @@ export const Image = Node.create({
           const img = figure.querySelector("img");
           const figcaption = figure.querySelector("figcaption");
           if (!img) return false;
+
+          // renderHTML puts the real width on the <figure> and always writes `width: 100%` on the
+          // <img> (it fills the figure), so reading the <img> would turn every width into "100%".
+          // A figure WITHOUT an inline width (the Markdown HTML fallback, older content) keeps its
+          // width on the <img> instead.
+          const figureWidth = figure.style.width;
+          const imgWidth = img.style.width || img.getAttribute("width") || null;
+          const width = figureWidth ? (figureWidth === "fit-content" ? null : figureWidth) : imgWidth;
+
           return {
             src: img.getAttribute("src"),
             alt: img.getAttribute("alt"),
             title: img.getAttribute("title"),
-            width: img.style.width || img.getAttribute("width") || null,
+            width: normalizeWidth(width),
             height: img.style.height || img.getAttribute("height") || null,
             align: figure.getAttribute("data-align") ?? "left",
             displayMode: figure.getAttribute("data-display-mode") ?? "block",
             caption: figcaption ? figcaption.textContent : null,
+            responsive: parseResponsiveFromElement(figure) ?? parseResponsiveFromElement(img),
           };
         },
       },
@@ -134,10 +152,11 @@ export const Image = Node.create({
             src: node.getAttribute("src"),
             alt: node.getAttribute("alt"),
             title: node.getAttribute("title"),
-            width: node.style.width || node.getAttribute("width") || null,
+            width: normalizeWidth(node.style.width || node.getAttribute("width")),
             height: node.style.height || node.getAttribute("height") || null,
             align: node.getAttribute("data-align") ?? "center",
             displayMode: node.getAttribute("data-display-mode") ?? "block",
+            responsive: parseResponsiveFromElement(node),
           };
         },
       },
@@ -145,10 +164,13 @@ export const Image = Node.create({
   },
 
   renderHTML({ HTMLAttributes, node }) {
-    const { src, alt, title, caption, captionAlign, align, displayMode, width, height } = node.attrs;
+    const { src, alt, title, caption, captionAlign, align, displayMode, width, height, responsive } = node.attrs;
+    const rw = normalizeResponsive(responsive);
+    // A legacy number (480) or a hostile string must never reach the style attribute.
+    const baseWidth = normalizeWidth(width);
     
     // 1. Style for the figure container (controls width and alignment)
-    const widthStyle = width ? `width: ${width};` : "width: fit-content; max-width: 100%;";
+    const widthStyle = baseWidth ? `width: ${baseWidth};` : "width: fit-content; max-width: 100%;";
     const alignmentMargins = 
       align === "center"
         ? "margin-left: auto; margin-right: auto;"
@@ -156,7 +178,12 @@ export const Image = Node.create({
           ? "margin-left: auto; margin-right: 0;"
           : "margin-left: 0; margin-right: auto;";
 
-    const figureStyle = [widthStyle, alignmentMargins].filter(Boolean).join(" ");
+    // Responsive width: custom properties read by the CSS in styles/content.css
+    const responsiveVars = Object.entries(responsiveStyleVars(rw, baseWidth || "fit-content"))
+      .map(([name, value]) => `${name}: ${value};`)
+      .join(" ");
+
+    const figureStyle = [widthStyle, alignmentMargins, responsiveVars].filter(Boolean).join(" ");
 
     // 2. Style for the img tag inside the figure
     const imgStyle = [
@@ -190,6 +217,7 @@ export const Image = Node.create({
         "data-align": align,
         "data-display-mode": displayMode,
         "data-caption-align": captionAlign || "left",
+        ...responsiveDataAttrs(rw),
         style: figureStyle,
       }),
       img,
@@ -241,7 +269,7 @@ export const ImageInline = Node.create({
           return {
             src: node.getAttribute("src"),
             alt: node.getAttribute("alt"),
-            width: node.style.width || node.getAttribute("width") || null,
+            width: normalizeWidth(node.style.width || node.getAttribute("width")),
             verticalAlign: node.style.verticalAlign || "baseline",
           };
         },
@@ -251,10 +279,11 @@ export const ImageInline = Node.create({
 
   renderHTML({ node }): DOMOutputSpec {
     const { src, alt, width, verticalAlign } = node.attrs;
+    const inlineWidth = normalizeWidth(width);
     const imgStyle = [
       "max-width: 100%;",
       "height: auto;",
-      width ? `width: ${width};` : "",
+      inlineWidth ? `width: ${inlineWidth};` : "",
       verticalAlign && verticalAlign !== "baseline" ? `vertical-align: ${verticalAlign};` : "",
     ].filter(Boolean).join(" ");
 

@@ -1,22 +1,57 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { NodeViewWrapper, type ReactNodeViewProps } from "@tiptap/react";
-import { Space, Button, Input, InputNumber, Popover, Typography } from "antd";
-import {
-  AlignLeftOutlined,
-  AlignCenterOutlined,
-  AlignRightOutlined,
-} from "@ant-design/icons";
+import { Button } from "antd";
 import { ImageFigure } from "../shared/ImageFigure";
-import type { ImageAlign, ImageDisplayMode } from "../types";
+import { ImageEditDrawer, type ImageEditValues } from "./ImageEditDrawer";
+import { normalizeResponsive } from "../responsive";
+import { normalizeWidth } from "../size";
 
-const { Text } = Typography;
-const sizePresets = ["25%", "50%", "75%", "100%"];
-const displayModeOptions: ImageDisplayMode[] = ["block", "float-left", "float-right"];
+// Only one edit drawer at a time: opening another image's drawer closes (and discards) the previous one.
+// `owner` identifies the node view that opened it.
+let activeDrawer: { owner: object; close: () => void } | null = null;
 
 export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeViewProps) => {
   const { src, alt, title, caption, captionAlign, displayMode, align, width, height } = node.attrs;
   const [open, setOpen] = useState(false);
+  // A new key for every opening gives the drawer a fresh draft (see ImageEditDrawer).
+  const [session, setSession] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const responsive = normalizeResponsive(node.attrs.responsive);
+
+  const [owner] = useState(() => ({}));
+
+  const closeDrawer = useCallback(() => {
+    setOpen(false);
+    if (activeDrawer?.owner === owner) activeDrawer = null;
+  }, [owner]);
+
+  // The node view can go away while its drawer is open (the image is deleted, undo, ...).
+  useEffect(
+    () => () => {
+      if (activeDrawer?.owner === owner) activeDrawer = null;
+    },
+    [owner],
+  );
+
+  const openDrawer = () => {
+    if (open) return;
+    activeDrawer?.close();
+    activeDrawer = { owner, close: closeDrawer };
+    setSession((s) => s + 1);
+    setOpen(true);
+  };
+
+  // What the form starts from. The drawer takes this once, when it opens.
+  const editValues: ImageEditValues = {
+    align: align ?? "left",
+    displayMode: displayMode ?? "block",
+    width: normalizeWidth(width),
+    responsive,
+    alt: alt ?? "",
+    caption: caption ?? "",
+    captionAlign: captionAlign ?? "left",
+  };
 
   // Dragging resize handles logic (Left & Right)
   const handleResizeStart = useCallback(
@@ -49,184 +84,42 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
     [updateAttributes]
   );
 
-  const changeWithDropdownEffect = (attr: Record<string, unknown>) => {
-    updateAttributes(attr);
-    setOpen(false);
-    setTimeout(() => setOpen(true), 0);
-  };
-
   const overlay = selected ? (
     <>
-      <Popover
-        trigger="click"
-        arrow={false}
-        placement="bottomRight"
-        // getPopupContainer={(trigger: HTMLElement) => trigger?.parentElement || document.body}
-        // styles={{
-        //   // container: { transition: 'none' },
-        //   root: { transition: 'none' },
-        // }}
-        open={open}
-        onOpenChange={setOpen}
-        content={
-          <Space orientation="vertical" style={{ width: 260 }}>
-            {/* Image Alignment */}
-            <div>
-              <Text type="secondary" style={{ fontSize: 12 }}>Image Align</Text>
-              <div style={{ marginTop: 2 }}>
-                <Space.Compact>
-                  <Button
-                    size="small"
-                    type={(align ?? "left") === "left" ? "primary" : "default"}
-                    icon={<AlignLeftOutlined />}
-                    // onClick={() => updateAttributes({ align: "left" as ImageAlign })}
-                    onClick={() => changeWithDropdownEffect({ align: "left" as ImageAlign })}
-                  />
-                  <Button
-                    size="small"
-                    type={align === "center" ? "primary" : "default"}
-                    icon={<AlignCenterOutlined />}
-                    onClick={() => changeWithDropdownEffect({ align: "center" as ImageAlign })}
-                  />
-                  <Button
-                    size="small"
-                    type={align === "right" ? "primary" : "default"}
-                    icon={<AlignRightOutlined />}
-                    onClick={() => changeWithDropdownEffect({ align: "right" as ImageAlign })}
-                  />
-                </Space.Compact>
-              </div>
-            </div>
-
-            {/* Display Mode */}
-            <Space.Compact>
-              {displayModeOptions.map((mode) => (
-                <Button
-                  key={mode}
-                  size="small"
-                  type={(displayMode ?? "block") === mode ? "primary" : "default"}
-                  onClick={() => changeWithDropdownEffect({ displayMode: mode })}
-                >
-                  {mode}
-                </Button>
-              ))}
-            </Space.Compact>
-
-            {/* Size Preset (%) */}
-            <div>
-              <Text type="secondary" style={{ fontSize: 12 }}>Size Preset (%)</Text>
-              <Space size={4} style={{ display: "flex", marginTop: 4 }}>
-                {sizePresets.map((p) => (
-                  <Button
-                    key={p}
-                    size="small"
-                    type={width === p ? "primary" : "default"}
-                    onClick={() => changeWithDropdownEffect({ width: p })}
-                  >
-                    {p}
-                  </Button>
-                ))}
-                <Button
-                  size="small"
-                  danger={!width}
-                  onClick={() => changeWithDropdownEffect({ width: null })}
-                >
-                  Reset
-                </Button>
-              </Space>
-            </div>
-
-            {/* Custom Width */}
-            <div>
-              <Text type="secondary" style={{ fontSize: 12 }}>Custom Width (%)</Text>
-              <InputNumber<number>
-                min={1}
-                max={100}
-                precision={0}
-                // placeholder={typeof width === "string" && width && !width.endsWith("%") ? width : "e.g. 50%"}
-                // Only a percentage can be shown here; a px width (e.g. "480px") leaves it empty.
-                // parseFloat, not unary "+": +"50%" is NaN.
-                value={typeof width === "string" && width.endsWith("%") ? Number.parseFloat(width) : null}
-                // Same pattern as the antd "Formatter" demo; an empty value must stay empty (not "%").
-                formatter={(val) => (val == null || val + '' === "" ? "" : val + '%')}
-                parser={(val) => val?.replace(/[^\d.]/g, "") as unknown as number}
-                onChange={(val) => updateAttributes({ width: val == null ? null : val + '%' })}
-                className="w-full mt-1"
-              />
-            </div>
-
-            {/* Caption & Caption Align */}
-            <Input
-              placeholder="Alt text"
-              value={alt ?? ""}
-              onChange={(e) => updateAttributes({ alt: e.target.value })}
-            />
-            <Input
-              placeholder="Caption text"
-              value={caption ?? ""}
-              onChange={(e) => updateAttributes({ caption: e.target.value })}
-            />
-
-            {caption && (
-              <div>
-                <Text type="secondary" style={{ fontSize: 12 }}>Caption Align</Text>
-                <div style={{ marginTop: 2 }}>
-                  <Space.Compact>
-                    <Button
-                      size="small"
-                      type={(captionAlign ?? "left") === "left" ? "primary" : "default"}
-                      icon={<AlignLeftOutlined />}
-                      onClick={() => updateAttributes({ captionAlign: "left" as ImageAlign })}
-                    />
-                    <Button
-                      size="small"
-                      type={(captionAlign ?? "left") === "center" ? "primary" : "default"}
-                      icon={<AlignCenterOutlined />}
-                      onClick={() => updateAttributes({ captionAlign: "center" as ImageAlign })}
-                    />
-                    <Button
-                      size="small"
-                      type={(captionAlign ?? "left") === "right" ? "primary" : "default"}
-                      icon={<AlignRightOutlined />}
-                      onClick={() => updateAttributes({ captionAlign: "right" as ImageAlign })}
-                    />
-                  </Space.Compact>
-                </div>
-              </div>
-            )}
-          </Space>
-        }
+      <Button
+        size="small"
+        className="absolute top-1 right-1 shadow z-2"
+        onClick={openDrawer}
       >
-        <Button 
-          size="small" 
-          className="absolute top-1 right-1 shadow z-2"
-        >
-          Edit image
-        </Button>
-      </Popover>
+        Edit image
+      </Button>
 
-      {/* Resize Handles */}
-      <div
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-8 bg-blue-500 rounded-r cursor-ew-resize z-1 flex items-center justify-center shadow"
-        onMouseDown={(e) => handleResizeStart(e, "left")}
-        title="Drag to resize"
-      >
-        <div className="w-0.5 h-4 bg-white rounded" />
-      </div>
-      <div
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-8 bg-blue-500 rounded-l cursor-ew-resize z-1 flex items-center justify-center shadow"
-        onMouseDown={(e) => handleResizeStart(e, "right")}
-        title="Drag to resize"
-      >
-        <div className="w-0.5 h-4 bg-white rounded" />
-      </div>
+      {/* Resize Handles. Hidden while the drawer is open: the drawer holds the edits until Save. */}
+      {!open && (
+        <>
+          <div
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-8 bg-blue-500 rounded-r cursor-ew-resize z-1 flex items-center justify-center shadow"
+            onMouseDown={(e) => handleResizeStart(e, "left")}
+            title="Drag to resize"
+          >
+            <div className="w-0.5 h-4 bg-white rounded" />
+          </div>
+          <div
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-8 bg-blue-500 rounded-l cursor-ew-resize z-1 flex items-center justify-center shadow"
+            onMouseDown={(e) => handleResizeStart(e, "right")}
+            title="Drag to resize"
+          >
+            <div className="w-0.5 h-4 bg-white rounded" />
+          </div>
+        </>
+      )}
     </>
   ) : null;
 
   return (
-    <NodeViewWrapper 
-      as="div" 
-      ref={containerRef} 
+    <NodeViewWrapper
+      as="div"
+      ref={containerRef}
       className="w-full"
     >
       <ImageFigure
@@ -239,8 +132,21 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
         align={align}
         width={width}
         height={height}
+        responsive={responsive}
         className={selected ? "relative inline-block rte-image-selected ring-2 ring-blue-400" : undefined}
         editorOverlay={overlay}
+      />
+
+      {/* Outside `selected`: the drawer stays open when the image loses its selection (e.g. you click the text). */}
+      <ImageEditDrawer
+        key={session}
+        open={open}
+        values={editValues}
+        onClose={closeDrawer}
+        onSave={(patch) => {
+          updateAttributes(patch);
+          closeDrawer();
+        }}
       />
     </NodeViewWrapper>
   );

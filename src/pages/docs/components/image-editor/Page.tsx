@@ -36,6 +36,7 @@ export default function Page(){
           accept="image/*"
           maxCount={1}
           pastable
+          pasteUrl
           webcam
           screenCapture
           showUploadList={false}

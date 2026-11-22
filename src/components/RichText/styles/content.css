@@ -423,3 +423,50 @@
 .rte-codeblock .tok-invalid {
   color: var(--rte-code-invalid);
 }
+
+/* ==========================================================================
+   Image: responsive width
+   Written by core/nodes/Image (ImageFigure / renderHTML) as:
+     <figure class="rte-image" data-rw="container|viewport"
+             style="--rte-w-base: <normal width>; --rte-w-md: 60%; ...">
+   Each range applies ONLY to itself (no inheritance between ranges). A range
+   without a value falls back to --rte-w-base, i.e. the normal width.
+   There is no rule for Large: from Large up (>= 56rem container, >= 1024px
+   viewport) nothing matches, so the figure's own inline width (the normal
+   width, "Width (all size)" in the editor) applies.
+   !important beats the inline `width` of the figure; that inline width stays
+   as the fallback when this stylesheet is not loaded.
+   Keep the breakpoints in sync with core/nodes/Image/responsive.ts.
+   ========================================================================== */
+
+/* The container for data-rw="container". Named, so the queries below can never
+   match some unrelated ancestor that happens to be a container too.
+   `inline-size` containment means the width must NOT depend on the content:
+   give this element a definite width (block level, width: 100%, flex: 1, ...). */
+.rte-content {
+  container-name: rte;
+  container-type: inline-size;
+  width: 100%;
+}
+
+/* ---- container: Tailwind container scale (@md 28rem / @2xl 42rem; Large = @4xl 56rem and up has no rule) ---- */
+@container rte (max-width: 27.999rem) {
+  .rte-image[data-rw="container"] { width: var(--rte-w-xs, var(--rte-w-base)) !important; }
+}
+@container rte (min-width: 28rem) and (max-width: 41.999rem) {
+  .rte-image[data-rw="container"] { width: var(--rte-w-sm, var(--rte-w-base)) !important; }
+}
+@container rte (min-width: 42rem) and (max-width: 55.999rem) {
+  .rte-image[data-rw="container"] { width: var(--rte-w-md, var(--rte-w-base)) !important; }
+}
+
+/* ---- viewport: Tailwind screens (sm 640 / md 768; Large = lg 1024 and up has no rule) ---- */
+@media (max-width: 639.98px) {
+  .rte-image[data-rw="viewport"] { width: var(--rte-w-xs, var(--rte-w-base)) !important; }
+}
+@media (min-width: 640px) and (max-width: 767.98px) {
+  .rte-image[data-rw="viewport"] { width: var(--rte-w-sm, var(--rte-w-base)) !important; }
+}
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .rte-image[data-rw="viewport"] { width: var(--rte-w-md, var(--rte-w-base)) !important; }
+}

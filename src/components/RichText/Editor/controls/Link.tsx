@@ -1,10 +1,12 @@
-import { forwardRef, useState } from "react";
+import { useState, type Ref } from "react";
 import { Modal, Form, Input, Select, Button, Typography, type ButtonProps } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import { NodeSelection } from "@tiptap/pm/state";
 import { useRichTextEditor } from "../Context";
 
-export interface LinkProps extends Omit<ButtonProps, "onClick"> {}
+export interface LinkProps extends Omit<ButtonProps, "onClick"> {
+  ref?: Ref<HTMLButtonElement>;
+}
 
 const TARGET_OPTIONS = [
   { value: "", label: "None" },
@@ -46,7 +48,7 @@ const EMPTY_VALUES: LinkFormValues = {
  * (see nodes/Image/markdown.ts's describeImageForMarkdown, which the
  * Markdown serializer composes with the Link's own capability check).
  */
-export const Link = forwardRef<HTMLButtonElement, LinkProps>((props, ref) => {
+export const Link = (props: LinkProps) => {
   const editor = useRichTextEditor();
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<LinkFormValues>(EMPTY_VALUES);
@@ -134,7 +136,7 @@ export const Link = forwardRef<HTMLButtonElement, LinkProps>((props, ref) => {
   return (
     <>
       <Button
-        ref={ref}
+        // ref={ref}
         type={editor.isActive("link") ? "primary" : "default"}
         icon={<LinkOutlined />}
         onClick={openModal}
@@ -237,6 +239,6 @@ export const Link = forwardRef<HTMLButtonElement, LinkProps>((props, ref) => {
       </Modal>
     </>
   );
-});
+};
 
 Link.displayName = "Link";
