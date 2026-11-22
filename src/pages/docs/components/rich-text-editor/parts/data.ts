@@ -159,7 +159,43 @@ export const initialJson: JSONContent = {
         caption: "Block image with a caption (Phase 5)",
         align: "left",
         displayMode: "block",
-        // width: 480,
+      },
+    },
+    {
+      type: "paragraph",
+      content: [
+        { type: "text", text: "Responsive width (Phase 5): select an image, open Edit image and use the Responsive tab. The first image below is 50% wide, but 100% while the editor content is narrower than 42rem (the usual max-md case: Extra Small + Small with the same value). The second one fills Extra Small, Small and Medium and keeps its 50% width from Large up. Narrow the browser window to see them change." },
+      ],
+    },
+    {
+      type: "image",
+      attrs: {
+        src: "https://picsum.photos/id/1015/1200/675",
+        alt: "Mountain river",
+        caption: "Responsive width: 100% below 42rem, 50% above",
+        captionAlign: "center",
+        align: "center",
+        displayMode: "block",
+        width: "50%",
+        responsive: { mode: "container", xs: 100, sm: 100 },
+      },
+    },
+    {
+      type: "image",
+      attrs: {
+        src: "https://picsum.photos/id/1018/1200/675",
+        alt: "Mountains",
+        caption: "Responsive width: 100% / 70% / 60%, then the 50% width from Large up",
+        captionAlign: "center",
+        align: "center",
+        displayMode: "block",
+        width: "50%",
+        responsive: {
+          mode: "container",
+          xs: 100,
+          sm: 70,
+          md: 60,
+        },
       },
     },
     {
@@ -167,7 +203,6 @@ export const initialJson: JSONContent = {
       attrs: {
         src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         provider: "youtube",
-        // width: 480,
         // height: 270,
         title: "Sample embed (Phase 6)",
       },
@@ -242,6 +277,12 @@ Line two.
 | 5 | Image | Done |
 
 <figure data-rte-image data-align="left" data-display-mode="block"><img src="https://picsum.photos/id/1015/640/360" alt="Mountain river"/><figcaption>Block image with a caption (Phase 5)</figcaption></figure>
+
+Responsive width \\(Phase 5\\): select an image, open Edit image and use the Responsive tab\\. The first image below is 50% wide, but 100% while the editor content is narrower than 42rem \\(the usual max\\-md case: Extra Small \\+ Small with the same value\\)\\. The second one fills Extra Small, Small and Medium and keeps its 50% width from Large up\\. Narrow the browser window to see them change\\.
+
+<figure data-rte-image data-align="center" data-display-mode="block"><img src="https://picsum.photos/id/1015/1200/675" alt="Mountain river" style="max-width:100%;height:auto;width:50%" data-rw="container" data-rw-sm="100" data-rw-xs="100" /><figcaption style="text-align:center">Responsive width: 100% below 42rem, 50% above</figcaption></figure>
+
+<figure data-rte-image data-align="center" data-display-mode="block"><img src="https://picsum.photos/id/1018/1200/675" alt="Mountains" style="max-width:100%;height:auto;width:50%" data-rw="container" data-rw-md="60" data-rw-sm="70" data-rw-xs="100" /><figcaption style="text-align:center">Responsive width: 100% / 70% / 60%, then the 50% width from Large up</figcaption></figure>
 
 <div class="rte-embed"><iframe data-rte-embed data-src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" data-provider="youtube" title="Sample embed (Phase 6)" style="width:100%;height:100%;border:0"></iframe></div>
 `;

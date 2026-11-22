@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { useState, type Ref } from "react";
 import { Button, Popover, type ButtonProps } from "antd";
 import { TableOutlined } from "@ant-design/icons";
 import type { Editor } from "@tiptap/core";
@@ -19,6 +19,7 @@ export interface TableProps extends Omit<ButtonProps, "onClick"> {
    * column border still overrides it per column afterwards.
    */
   columnWidth?: number;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /** CKEditor-style minimum width of an empty column. */
@@ -54,10 +55,14 @@ const applyColumnWidths = (editor: Editor, width: number): void => {
     tableNode.descendants((node, pos) => {
       if (node.type.name === "tableCell" || node.type.name === "tableHeader") {
         // pos is relative to the table's content start (tablePos + 1).
-        tr.setNodeMarkup(tablePos + 1 + pos, undefined, {
-          ...node.attrs,
-          colwidth: [width],
-        });
+        tr.setNodeMarkup(
+          tablePos + 1 + pos, 
+          void 0, 
+          {
+            ...node.attrs,
+            colwidth: [width],
+          }
+        );
       }
       return true;
     });
@@ -82,7 +87,7 @@ const GridPicker = ({
   onPick: (rows: number, cols: number) => void;
 }) => {
   const [hover, setHover] = useState<{ r: number; c: number }>({ r: -1, c: -1 });
-  const label = hover.r >= 0 ? `${hover.r + 1} × ${hover.c + 1}` : "Pick a size";
+  const label = hover.r >= 0 ? `${hover.r + 1} x ${hover.c + 1}` : "Pick a size";
 
   return (
     <div
@@ -122,39 +127,49 @@ const GridPicker = ({
  * picker. Requires createTableExtensions(). Not a Toolbar (RULE 4/5/6):
  * place it wherever, e.g. inside a consumer `<Space>`.
  */
-export const Table = forwardRef<HTMLButtonElement, TableProps>(
-  (
-    { maxRows = 10, maxCols = 10, withHeaderRow = true, columnWidth, ...props },
-    ref,
-  ) => {
-    const editor = useRichTextEditor();
-    const [open, setOpen] = useState(false);
-    if (!editor) return null;
+export const Table = ({
+  maxRows = 10,
+  maxCols = 10,
+  withHeaderRow = true,
+  columnWidth,
+  // ref,
+  ...props
+}: TableProps) => {
+  const editor = useRichTextEditor();
+  const [open, setOpen] = useState(false);
+  if (!editor) return null;
 
-    const canInsert =
-      editor.can().insertTable?.({ rows: 2, cols: 2, withHeaderRow }) ?? false;
+  const canInsert = editor.can().insertTable?.({ rows: 2, cols: 2, withHeaderRow }) ?? false;
 
-    const insert = (rows: number, cols: number) => {
-      const width = columnWidth ?? DEFAULT_COLUMN_WIDTH;
-      editor.chain().focus().insertTable({ rows, cols, withHeaderRow }).run();
-      applyColumnWidths(editor, width);
-      setOpen(false);
-    };
+  const insert = (rows: number, cols: number) => {
+    const width = columnWidth ?? DEFAULT_COLUMN_WIDTH;
+    editor.chain().focus().insertTable({ rows, cols, withHeaderRow }).run();
+    applyColumnWidths(editor, width);
+    setOpen(false);
+  };
 
-    return (
-      <Popover
-        trigger="click"
-        open={open && canInsert}
-        onOpenChange={setOpen}
-        title="Insert table"
-        content={
-          <GridPicker maxRows={maxRows} maxCols={maxCols} onPick={insert} />
-        }
-      >
-        <Button ref={ref} icon={<TableOutlined />} disabled={!canInsert} {...props} />
-      </Popover>
-    );
-  },
-);
+  return (
+    <Popover
+      trigger="click"
+      open={open && canInsert}
+      onOpenChange={setOpen}
+      title="Insert table"
+      content={
+        <GridPicker 
+          maxRows={maxRows} 
+          maxCols={maxCols} 
+          onPick={insert} 
+        />
+      }
+    >
+      <Button 
+        // ref={ref} 
+        icon={<TableOutlined />} 
+        disabled={!canInsert} 
+        {...props} 
+      />
+    </Popover>
+  );
+};
 
-Table.displayName = "Table";
+// Table.displayName = "Table";

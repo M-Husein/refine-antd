@@ -19,6 +19,7 @@ export const imageNodeRenderers: Record<string, NodeRenderer> = {
       align={node.attrs?.align}
       width={node.attrs?.width}
       height={node.attrs?.height}
+      responsive={node.attrs?.responsive}
     />
   ),
   imageInline: (node, key) => (

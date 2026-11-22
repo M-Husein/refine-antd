@@ -83,6 +83,94 @@ Perilaku: gambar dalam satu batch disisipkan bersamaan, sesuai urutan pemilihan,
 
 Membutuhkan konteks Refine (FilePicker memakai `useTranslate`).
 
+### Edit image
+
+**Edit image** (tombol pada gambar yang terpilih) membuka **drawer di kanan**, tanpa mask: editor di belakangnya tetap terlihat dan bisa dipakai. Isinya tiga tab:
+
+| Tab | Isi |
+| --- | --- |
+| Layout | Image Align, Display mode, Size Preset, **Width (all size)** |
+| Responsive | mode (Container / Viewport) dan rentang, lihat "Lebar responsif gambar" |
+| Caption | Alt text, Caption, Caption Align |
+
+Perilakunya:
+- **Edit disimpan sekaligus.** Tidak ada yang masuk ke dokumen sebelum **Save**. Save menerapkan semua perubahan dalam **satu transaksi, sehingga satu Ctrl+Z membatalkan semuanya**. **Cancel**, tombol tutup, dan **Esc** membuang draf, dan drawer yang dibuka lagi selalu mulai dari nilai gambar saat itu. Save tetap nonaktif selama tidak ada yang berbeda dari awal.
+- Hanya field yang Anda ubah yang ditulis, jadi field yang tidak disentuh (misalnya lebar `480px` yang tidak bisa ditampilkan form) tidak pernah ditimpa.
+- Drawer **tidak bergantung pada seleksi**: mengklik teks di editor tidak menutupnya, dan Save tetap berlaku untuk gambar tempat drawer dibuka.
+- **Satu drawer pada satu waktu.** Membuka drawer gambar lain menutup yang sebelumnya dan membuang edit yang belum disimpan.
+- **Handle resize disembunyikan** selama drawer terbuka (jika tidak, lebar berubah di belakang draf); gunakan handle saat drawer tertutup.
+- Isinya bisa digulir sendiri dan footer Save / Cancel selalu terlihat, juga di layar laptop (tinggi sekitar 650px) dan di ponsel.
+
+### Nilai lebar gambar
+
+`width` gambar juga bisa datang dari luar editor (JSON tersimpan, HTML yang ditempel, Markdown). Nilainya dibaca lewat satu fungsi toleran, `normalizeWidth` di `core/nodes/Image/size.ts`, yang dipakai oleh renderer React, serializer HTML, parser, dan serializer Markdown:
+
+| Masukan | Hasil |
+| --- | --- |
+| `480`, `"480"` | `480px` (nilai piksel lama) |
+| `"50%"`, `"20rem"`, `"30vw"`, `"12.5px"` | tidak berubah (satuan: `px`, `%`, `rem`, `em`, `vw`, `vh`, `ch`) |
+| `0`, negatif, `NaN`, `"auto"`, `"fit-content"`, `"calc(...)"`, apa pun yang memuat `;` atau tanda kutip | diabaikan: gambar memakai ukuran aslinya |
+
+Jadi lebar tidak lagi bisa menjadi CSS yang tidak valid (lebarnya hilang diam-diam) atau menyelundupkan CSS / atribut tambahan ke keluaran HTML dan Markdown. Kalau Anda butuh nilai CSS lain (misalnya `calc()`), polanya di `size.ts` harus ditambah.
+
+`captionAlign` (default `left`, `center`, `right`) terjaga di JSON, HTML, dan Markdown (ditulis sebagai `text-align` pada `<figcaption>`).
+
+Versi mendatang mungkin menyimpan lebar sebagai angka persen (lihat "Fitur mendatang").
+
+### Lebar responsif gambar
+
+Selain lebar normal, gambar bisa diberi lebar berbeda untuk setiap rentang ukuran. Buka **Edit image**: **Width (all size)** (tab Layout) adalah lebar normal, dan tab **Responsive** mengatur rentang di bawah Large. Nilainya persen (bilangan bulat 5 sampai 100).
+
+**Satu mode per gambar** (pilihan di atas input):
+
+| Mode | Diukur pada | Dipakai untuk |
+| --- | --- | --- |
+| `container` (default) | lebar konten editor / viewer (`.rte-content`) | konten yang berada di kolom, kartu, sidebar, atau layout apa pun |
+| `viewport` | jendela browser | layout tingkat halaman |
+
+**Rentang.** Tiap rentang berlaku **hanya untuk dirinya sendiri** (tidak ada pewarisan antar rentang). Rentang yang kosong memakai lebar normal.
+
+| Input | `viewport` (screens Tailwind) | `container` (skala container Tailwind) |
+| --- | --- | --- |
+| Extra Small | < 640px | < 28rem (448px), di bawah `@md` |
+| Small | 640 sampai 767px | 28rem sampai < 42rem (448 sampai 671px), `@md` sampai `@2xl` |
+| Medium | 768 sampai 1023px | 42rem sampai < 56rem (672 sampai 895px), `@2xl` sampai `@4xl` |
+| Large | ≥ 1024px | ≥ 56rem (896px), mulai `@4xl` |
+
+**Tidak ada input untuk Large.** Lebar normal, **Width (all size)**, adalah lebar Large: berlaku mulai Large ke atas dan untuk setiap rentang yang tidak punya nilai. Jadi ukuran desktop cukup diatur sekali di **Width (all size)**, dan Anda hanya meng-override yang berbeda di ukuran lebih kecil (pendekatan "desktop first"). Nilai `lg` di data lama diabaikan.
+
+**Petunjuk perangkat.** Editor menampilkan petunjuk di bawah setiap input (teksnya di `RESPONSIVE_DEVICES`, `core/nodes/Image/responsive.ts`):
+
+| Input | `viewport` | `container` |
+| --- | --- | --- |
+| Extra Small | Phones, portrait | Narrow column or card (phone-sized) |
+| Small | Phones, landscape · small tablets | Narrow column |
+| Medium | Tablets, portrait · large phones, landscape | Article-width column (tablet-sized) |
+| Width (all size), mulai Large | Laptops · desktops · tablets, landscape | Wide content area (laptop-sized) |
+
+Rentang didasarkan pada **lebar** jendela / konten, bukan pada perangkat. Ponsel landscape dan tablet portrait tidak bisa dibedakan dari lebarnya: ponsel modern sekitar 780 sampai 930px di landscape dan iPad sekitar 768 sampai 834px di portrait, jadi keduanya masuk Medium. Pada mode `container` petunjuknya menggambarkan tata letak, karena lebar konten bergantung pada halaman, bukan pada perangkat.
+
+Padanan varian Tailwind yang biasa Anda pakai (mode `viewport`):
+- `max-sm` (< 640px) = **Extra Small**
+- `max-md` (< 768px) = **Extra Small + Small** dengan nilai yang sama; Medium ke atas tetap memakai **Width (all size)**. Tidak menjangkau ponsel besar saat landscape (sekitar 780 sampai 930px).
+- `max-lg` (< 1024px) = **Extra Small + Small + Medium** dengan nilai yang sama; ini juga mencakup ponsel besar saat landscape, dan tablet portrait.
+
+Nilai rentang menggantikan **Width (all size)** (beserta preset dan handle resize, yang mengatur lebar yang sama) di dalam rentangnya, sehingga kontrol itu terlihat tidak berpengaruh di rentang yang punya nilai. Mulai Large ke atas semuanya bekerja seperti biasa. Editor memberi tahu hal ini selama lebar responsif diatur.
+
+Tidak bisa tanpa mengisi rentang yang lebih kecil: "kecil secara default, lebih besar hanya di layar besar" (mobile first). Atur **Width (all size)** ke lebar besar lalu isi Extra Small, Small, dan Medium dengan lebar yang kecil.
+
+**Disimpan sebagai.**
+- JSON: `responsive: { mode: "container" | "viewport", xs?: number, sm?: number, md?: number } | null`. `null` berarti tidak ada lebar responsif. Nilai divalidasi di setiap pembacaan (hanya angka terbatas, dibulatkan, dibatasi 5 sampai 100), sehingga hanya angka yang bisa sampai ke HTML.
+- HTML / Markdown: `data-rw="container"` dan `data-rw-xs` / `-sm` / `-md` pada gambar, ditambah custom property inline (`--rte-w-md: 60%`, ...) dan `--rte-w-base` (lebar normal) yang dibaca stylesheet. Gambar dengan lebar responsif ditulis sebagai HTML di Markdown (tidak bisa diungkapkan secara native).
+
+**Persyaratan.**
+- `styles/content.css` (di-import oleh `Editor` dan `Viewer`) menjadikan `.rte-content` sebuah **size container bernama** (`container-name: rte; container-type: inline-size`). Dengan containment inline-size, lebar elemen tidak boleh bergantung pada isinya, jadi harus punya lebar pasti: stylesheet menyetel `width: 100%`. Jangan menjadikan `.rte-content` sebagai `inline-block` atau flex item dengan lebar auto, atau lebarnya menyusut menjadi 0px.
+- Container-nya adalah seluruh `.rte-content`, bukan induk terdekat. Gambar di dalam sel tabel atau blockquote memakai lebar editor untuk menentukan rentang, sedangkan persennya tetap relatif terhadap sel.
+- Elemen turunan `position: fixed` tidak terpengaruh.
+- Container query membutuhkan Chrome 105+, Safari 16+, atau Firefox 110+. Browser yang lebih lama mengabaikan aturannya dan menampilkan lebar normal.
+- Rentang ada di dua tempat yang harus tetap sinkron: `core/nodes/Image/responsive.ts` (label, validasi) dan `styles/content.css` (media dan container query).
+- HTML / Markdown yang dirender **di luar** app ini tetap membawa atributnya, tetapi butuh CSS yang sama (dan container dengan lebar pasti) agar bereaksi. Tanpa itu, lebar normal yang ditampilkan.
+
 ## Berpindah format
 
 `value` dan `format` harus berubah bersamaan (json berupa objek, html/markdown berupa string). Gunakan `convertContent` untuk meng-encode ulang dokumen saat ini dengan schema lengkap:
@@ -106,9 +194,14 @@ Embed hanya merender YouTube dan Vimeo secara default. Provider `custom` hanya m
 
 Serialisasi Markdown tidak menghilangkan informasi: hal yang tidak bisa diekspresikan Markdown (alignment gambar, lebar kolom tabel, embed, ...) memakai fallback HTML inline. Math memakai `$...$` / `$$...$$`.
 
+HTML yang ditulis editor (format `html` dan fallback HTML di dalam Markdown):
+- **Style inline ditulis ringkas**: `style="max-width:100%;height:auto"`, tanpa spasi setelah `:` atau `;` dan tanpa `;` di akhir. `jsonToHtml` menerapkan `compactHtmlStyles` (`core/content/style-attr.ts`) pada setiap atribut `style` dan menulis nama atributnya dengan huruf kecil. Fungsi itu hanya menyentuh teks di dalam tag, sehingga teks yang kebetulan memuat `style="..."` tidak pernah berubah.
+- **Nilai gambar di-escape.** `src`, `alt`, `title`, dan caption di-escape sebagai HTML (`& < > " '`), sehingga tanda kutip atau `<` di alt text tidak lagi memotong atribut, menghilangkan nilainya saat dibaca balik, atau menambah atribut seperti `onerror` pada tag. `align`, `displayMode`, `verticalAlign`, dan `height` hanya boleh salah satu nilai yang dikenal atau panjang CSS sederhana; selain itu dibuang. Pada sintaks native `![alt](src "title")`, kurung siku, backslash, dan tanda kutip di-escape, dan URL yang mengandung spasi atau tanda kurung dibungkus `<...>`.
+- `href` / `title` pada **link** yang ditulis serializer Markdown (`core/content/link-markdown.ts`) belum di-escape.
+
 ## Keterbatasan yang diketahui
 
-- **Belum ada i18n.** Teks UI di-hardcode dalam bahasa Inggris dan belum lewat `useTranslate` (Refine). Terdampak: tooltip dan label control, popover Link/Image/Video/Audio/Embed/Math (label, placeholder, tombol), judul modal ImageControl (`Insert image`; FilePicker di dalamnya sudah bisa diterjemahkan), pemilih ukuran dan toolbar tabel, header code block (`Code language`, `Code theme`, `Copy code`). To do: pindahkan ke file locale.
+- **Belum ada i18n.** Teks UI di-hardcode dalam bahasa Inggris dan belum lewat `useTranslate` (Refine). Terdampak: tooltip dan label control, popover Link/Image/Video/Audio/Embed/Math (label, placeholder, tombol), drawer "Edit image" (tab, label, dan tombol, termasuk label lebar responsif), judul modal ImageControl (`Insert image`; FilePicker di dalamnya sudah bisa diterjemahkan), pemilih ukuran dan toolbar tabel, header code block (`Code language`, `Code theme`, `Copy code`). To do: pindahkan ke file locale.
 - `createEditorExtensions()` (dan `extensions` pada umumnya) harus referensi yang stabil; array baru di setiap render membangun ulang editor.
 - `readOnly` hanya kunci sementara, bukan viewer.
 - Memakai class CSS `rte-*` (`../styles`); `mathlive/static.css` di-import oleh komponen.
@@ -120,7 +213,7 @@ Serialisasi Markdown tidak menghilangkan informasi: hal yang tidak bisa diekspre
 
 ### Lebar gambar disimpan sebagai angka (persen)
 
-Saat ini atribut `width` gambar berupa string CSS (`"50%"`, `"480px"`), dan handle resize, preset ukuran, Slider, serta input "Custom Width" masing-masing menulisnya dengan cara sendiri. Idenya: simpan **satu angka, persen 1 sampai 100**, dan bentuk string CSS hanya saat render.
+Saat ini atribut `width` gambar berupa string CSS (`"50%"`, `"480px"`), dan handle resize, preset ukuran, Slider, serta input "Width (all size)" masing-masing menulisnya dengan cara sendiri. Idenya: simpan **satu angka, persen 1 sampai 100**, dan bentuk string CSS hanya saat render.
 
 Alasan:
 - Slider dan InputNumber terhubung langsung ke atribut, tanpa `parseFloat` / `formatter` / `parser`.

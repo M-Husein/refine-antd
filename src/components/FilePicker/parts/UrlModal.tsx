@@ -3,6 +3,7 @@ import { Button, Flex, Input, Modal } from 'antd';
 import { useTranslate } from '@refinedev/core';
 import { UrlError, urlToFile } from './utils';
 import type { UrlErrorCode, UrlToFileOptions } from './types';
+import type { InputRef } from 'antd/es/input';
 
 type UrlModalProps = {
   open: boolean;
@@ -10,12 +11,18 @@ type UrlModalProps = {
   onFile: (file: File) => void;
 } & Pick<UrlToFileOptions, 'accept' | 'timeout' | 'fetchUrl'>;
 
-export const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) => {
+export const UrlModal = ({ 
+  open, 
+  onClose, 
+  onFile, 
+  ...options 
+}: UrlModalProps) => {
   const t = useTranslate();
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<InputRef>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -23,7 +30,7 @@ export const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) =
     const code: UrlErrorCode = err instanceof UrlError ? err.code : 'network';
     switch (code) {
       case 'invalid':
-        return t('filePicker.urlInvalid', 'Enter a valid URL, e.g. https://example.com/image.png');
+        return t('filePicker.urlInvalid', 'Enter a valid URL'); // , e.g. https://example.com/image.png
       case 'protocol':
         return t('filePicker.urlProtocol', 'Only http:// and https:// links are supported.');
       case 'http': {
@@ -75,6 +82,9 @@ export const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) =
       onCancel={close}
       centered
       title={t('filePicker.fromUrl', 'From URL')}
+      afterOpenChange={(isOpen) => {
+        if (isOpen) inputRef.current?.focus();
+      }}
       afterClose={() => {
         setValue('');
         setError(null);
@@ -90,14 +100,14 @@ export const UrlModal = ({ open, onClose, onFile, ...options }: UrlModalProps) =
       }
     >
       <Input
+        ref={inputRef}
         type="url"
-        autoFocus
         allowClear
         inputMode="url"
         value={value}
         disabled={loading}
-        status={error ? 'error' : undefined}
-        placeholder={t('filePicker.urlPlaceholder', 'https://example.com/image.png')}
+        status={error ? 'error' : void 0}
+        // placeholder={t('filePicker.urlPlaceholder', 'https://example.com/image.png')}
         // aria-label={t('filePicker.fromUrl', 'From URL')}
         // aria-invalid={!!error}
         onChange={(evt) => {

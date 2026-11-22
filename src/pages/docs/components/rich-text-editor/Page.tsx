@@ -30,48 +30,57 @@ import {
 } from "@/components/RichText/Editor";
 import { initialJson, initialMarkdown } from './parts/data';
 
-const Toolbar = () => (
-  <Space wrap size={[4, 4]} className="w-full p-1 !sticky top-12 z-1 bg-white">
-    <Heading />
-    <Space.Compact>
-      <Bold />
-      <Italic />
-      <Underline />
-      <Strikethrough />
-    </Space.Compact>
-    <Space.Compact>
-      <BulletList />
-      <OrderedList />
-      <Checklist />
-      <Tooltip title="Code block">
-        <CodeBlockControl />
-      </Tooltip>
-    </Space.Compact>
-    <Link />
-    <TableControl />
-    <ImageControl 
-      pastable 
-      pasteUrl 
-      webcam 
-      screenCapture
-      // multiple 
-    />
-    <VideoControl />
-    <AudioControl />
-    <EmbedControl providers={["youtube", "vimeo"]} />
-    <MathControl />
-    <Space.Compact>
-      <Undo />
-      <Redo />
-    </Space.Compact>
-  </Space>
-);
+const Toolbar = () => {
+  const imageVideoProps = {
+    classNames: {
+      trigger: "aspect-video"
+    }
+  };
+  return (
+    <Space 
+      wrap 
+      size={[4, 4]} 
+      className="w-full p-1 !sticky top-12 z-1 bg-white"
+    >
+      <Heading />
+      <Space.Compact>
+        <Bold />
+        <Italic />
+        <Underline />
+        <Strikethrough />
+      </Space.Compact>
+      <Space.Compact>
+        <BulletList />
+        <OrderedList />
+        <Checklist />
+        <Tooltip title="Code block">
+          <CodeBlockControl />
+        </Tooltip>
+      </Space.Compact>
+      <Link />
+      <TableControl />
+      <ImageControl
+        filePicker={imageVideoProps}
+      />
+      <VideoControl
+        filePicker={imageVideoProps}
+      />
+      <AudioControl />
+      <EmbedControl provider="youtube" />
+      <MathControl />
+      <Space.Compact>
+        <Undo />
+        <Redo />
+      </Space.Compact>
+    </Space>
+  );
+};
 
 export default function Page() {
   useDocumentTitle("<Editor />");
 
   const [format, setFormat] = useState<ContentFormat>("markdown");
-  const [value, setValue] = useState<string | JSONContent>(initialJson);
+  const [value, setValue] = useState<string | JSONContent>(initialMarkdown);
   const [readOnly, setReadOnly] = useState(false);
   // Created once: a new extensions array rebuilds the editor.
   const extensions = useMemo(() => createEditorExtensions(), []);

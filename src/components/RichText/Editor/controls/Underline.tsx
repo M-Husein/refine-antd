@@ -1,16 +1,19 @@
-import { forwardRef } from "react";
+import { type Ref } from "react";
 import { Button, type ButtonProps } from "antd";
 import { UnderlineOutlined } from "@ant-design/icons";
 import { useRichTextEditor } from "../Context";
 
-export interface UnderlineProps extends Omit<ButtonProps, "onClick"> {}
+export interface UnderlineProps extends Omit<ButtonProps, "onClick"> {
+  ref?: Ref<HTMLButtonElement>;
+}
 
-export const Underline = forwardRef<HTMLButtonElement, UnderlineProps>((props, ref) => {
+/** Editor control — toggles the underline mark. */
+export const Underline = (props: UnderlineProps) => {
   const editor = useRichTextEditor();
   if (!editor) return null;
   return (
     <Button
-      ref={ref}
+      // ref={ref}
       type={editor.isActive("underline") ? "primary" : "default"}
       icon={<UnderlineOutlined />}
       disabled={!editor.can().chain().focus().toggleUnderline().run()}
@@ -18,6 +21,6 @@ export const Underline = forwardRef<HTMLButtonElement, UnderlineProps>((props, r
       {...props}
     />
   );
-});
+};
 
-Underline.displayName = "Underline";
+// Underline.displayName = "Underline";

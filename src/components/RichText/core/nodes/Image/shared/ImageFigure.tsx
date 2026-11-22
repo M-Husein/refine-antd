@@ -2,8 +2,11 @@ import type { CSSProperties, ReactNode } from "react";
 import type {
   ImageAlign,
   ImageDisplayMode,
+  ImageResponsive,
   ImageVerticalAlign,
 } from "../types";
+import { normalizeResponsive, responsiveDataAttrs, responsiveStyleVars } from "../responsive";
+import { normalizeWidth } from "../size";
 
 const alignToJustify: Record<ImageAlign, CSSProperties["alignItems"]> = {
   left: "flex-start",
@@ -23,6 +26,8 @@ export interface ImageFigureProps {
   height?: string | null;
   editorOverlay?: ReactNode;
   className?: string;
+  /** Per-range widths (see ../responsive.ts). Applied by the CSS in styles/content.css. */
+  responsive?: ImageResponsive | null;
 }
 
 export const ImageFigure = ({
@@ -34,10 +39,13 @@ export const ImageFigure = ({
   height,
   editorOverlay,
   className,
+  responsive,
   ...etc
 }: ImageFigureProps) => {
   // If a width is provided, use that value. Otherwise, use fit-content with a max-width of 100%.
-  const widthStyle = width ? { width } : { width: 'fit-content', maxWidth: '100%' };
+  // `width` may be a legacy number (480) at runtime; normalizeWidth turns it into a safe CSS value.
+  const baseWidth = normalizeWidth(width);
+  const widthStyle = baseWidth ? { width: baseWidth } : { width: 'fit-content', maxWidth: '100%' };
 
   // Consistent horizontal alignment for both selected and unselected states
   const alignmentMargins: CSSProperties = 
@@ -58,22 +66,34 @@ export const ImageFigure = ({
             alignItems: alignToJustify[align],
             ...widthStyle,
             maxWidth: '100%',
-            ...alignmentMargins,
+            ...alignmentMargins
           };
 
-  const imgStyle: CSSProperties = {
-    width: "100%",
-    maxWidth: "100%",
-    height: height || "auto",
-  };
+  // Responsive width: the CSS rules (styles/content.css) pick the range that matches and override
+  // the inline width with !important. The inline width stays as the fallback (no CSS loaded, or no
+  // value for the current range).
+  const rw = normalizeResponsive(responsive);
+  const responsiveStyle = responsiveStyleVars(rw, baseWidth || "fit-content") as CSSProperties;
+
+  // const imgStyle: CSSProperties = {
+  //   // width: '100%',
+  //   // maxWidth: '100%',
+  //   height: height || 'auto',
+  // };
 
   return (
     <figure
-      className={`rte-image rte-image--${displayMode} ${className || ''}`}
-      style={figureStyle}
+      className={["rte-image", `rte-image--${displayMode}`, className].filter(Boolean).join(" ")}
+      style={{ ...figureStyle, ...responsiveStyle }}
       data-align={align}
+      {...responsiveDataAttrs(rw)}
     >
-      <img style={imgStyle} {...etc} className="block" />
+      <img 
+        // style={imgStyle} 
+        style={height ? { height } : void 0}
+        {...etc} 
+        className="block w-full max-w-full h-auto" 
+      />
       {editorOverlay}
       {caption && (
         <figcaption 
@@ -119,7 +139,7 @@ export const ImageInlineSpan = ({
         style={{
           // maxWidth: '100%',
           // height: 'auto',
-          ...(width ? { width } : {}),
+          ...(normalizeWidth(width) ? { width: normalizeWidth(width) as string } : {}),
           ...(verticalAlign && verticalAlign !== "baseline" ? { verticalAlign } : {}),
         }}
         className="max-w-full h-auto"

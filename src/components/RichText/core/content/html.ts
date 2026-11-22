@@ -8,11 +8,12 @@
 
 import { generateHTML, generateJSON } from "@tiptap/html";
 import type { AnyExtension, JSONContent } from "@tiptap/core";
+import { compactHtmlStyles } from "./style-attr";
 
 export const jsonToHtml = (
   doc: JSONContent,
   extensions: AnyExtension[],
-): string => generateHTML(doc, extensions);
+): string => compactHtmlStyles(generateHTML(doc, extensions));
 
 export const htmlToJson = (
   html: string,
