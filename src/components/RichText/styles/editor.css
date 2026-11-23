@@ -161,3 +161,104 @@
 .rte-codeblock__editor .cm-scroller {
   overflow: auto;
 }
+
+/**
+ * Image edit modal: live preview on the left, form on the right
+ * (stacked on narrow screens). Classes are on the Modal's rootClassName.
+ */
+.rte-image-edit .rte-image-edit__layout {
+  display: flex;
+  height: min(80vh, 760px);
+}
+
+.rte-image-edit .rte-image-edit__preview {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #1f1f1f;
+}
+
+.rte-image-edit .rte-image-edit__info {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+}
+
+.rte-image-edit .rte-image-edit__stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.rte-image-edit .rte-image-edit__frame {
+  max-width: 100%;
+  flex: none;
+  align-self: flex-start;
+  background: #fff;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.rte-image-edit .rte-image-edit__lines {
+  margin-top: 8px;
+}
+
+.rte-image-edit .rte-image-edit__lines i {
+  display: block;
+  height: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  background: #e5e5e5;
+}
+
+.rte-image-edit .rte-image-edit__lines i:nth-child(3n) {
+  width: 70%;
+}
+
+.rte-image-edit .rte-image-edit__panel {
+  flex: 0 0 380px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rte-image-edit .rte-image-edit__title {
+  padding: 16px 24px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rte-image-edit .rte-image-edit__tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 24px;
+}
+
+.rte-image-edit .rte-image-edit__footer {
+  padding: 12px 24px;
+  border-top: 1px solid rgba(5, 5, 5, 0.06);
+}
+
+@media (max-width: 767px) {
+  .rte-image-edit .rte-image-edit__layout {
+    flex-direction: column;
+    /* height: 85vh; */
+    height: 100vh;
+  }
+
+  .rte-image-edit .rte-image-edit__preview {
+    flex: 0 0 35vh;
+  }
+
+  .rte-image-edit .rte-image-edit__panel {
+    flex: 1 1 auto;
+    width: auto;
+  }
+}

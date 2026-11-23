@@ -1,48 +1,29 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { NodeViewWrapper, type ReactNodeViewProps } from "@tiptap/react";
 import { Button } from "antd";
 import { ImageFigure } from "../shared/ImageFigure";
-import { ImageEditDrawer, type ImageEditValues } from "./ImageEditDrawer";
+import { ImageEditModal, type ImageEditValues } from "./ImageEditModal";
 import { normalizeResponsive } from "../responsive";
 import { normalizeWidth } from "../size";
-
-// Only one edit drawer at a time: opening another image's drawer closes (and discards) the previous one.
-// `owner` identifies the node view that opened it.
-let activeDrawer: { owner: object; close: () => void } | null = null;
 
 export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeViewProps) => {
   const { src, alt, title, caption, captionAlign, displayMode, align, width, height } = node.attrs;
   const [open, setOpen] = useState(false);
-  // A new key for every opening gives the drawer a fresh draft (see ImageEditDrawer).
+  // A new key for every opening gives the modal a fresh draft (see ImageEditModal).
   const [session, setSession] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const responsive = normalizeResponsive(node.attrs.responsive);
 
-  const [owner] = useState(() => ({}));
+  const closeModal = useCallback(() => setOpen(false), []);
 
-  const closeDrawer = useCallback(() => {
-    setOpen(false);
-    if (activeDrawer?.owner === owner) activeDrawer = null;
-  }, [owner]);
-
-  // The node view can go away while its drawer is open (the image is deleted, undo, ...).
-  useEffect(
-    () => () => {
-      if (activeDrawer?.owner === owner) activeDrawer = null;
-    },
-    [owner],
-  );
-
-  const openDrawer = () => {
+  const openModal = () => {
     if (open) return;
-    activeDrawer?.close();
-    activeDrawer = { owner, close: closeDrawer };
     setSession((s) => s + 1);
     setOpen(true);
   };
 
-  // What the form starts from. The drawer takes this once, when it opens.
+  // What the form starts from. The modal takes this once, when it opens.
   const editValues: ImageEditValues = {
     align: align ?? "left",
     displayMode: displayMode ?? "block",
@@ -89,14 +70,13 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
       <Button
         size="small"
         className="absolute top-1 right-1 shadow z-2"
-        onClick={openDrawer}
+        onClick={openModal}
       >
         Edit image
       </Button>
 
-      {/* Resize Handles. Hidden while the drawer is open: the drawer holds the edits until Save. */}
-      {!open && (
-        <>
+      {/* Resize Handles */}
+      <>
           <div
             className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-8 bg-blue-500 rounded-r cursor-ew-resize z-1 flex items-center justify-center shadow"
             onMouseDown={(e) => handleResizeStart(e, "left")}
@@ -111,8 +91,7 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
           >
             <div className="w-0.5 h-4 bg-white rounded" />
           </div>
-        </>
-      )}
+      </>
     </>
   ) : null;
 
@@ -137,15 +116,16 @@ export const ImageNodeView = ({ node, updateAttributes, selected }: ReactNodeVie
         editorOverlay={overlay}
       />
 
-      {/* Outside `selected`: the drawer stays open when the image loses its selection (e.g. you click the text). */}
-      <ImageEditDrawer
+      {/* Outside `selected`: the modal stays open when the image loses its selection. */}
+      <ImageEditModal
         key={session}
         open={open}
+        image={{ src, title, height }}
         values={editValues}
-        onClose={closeDrawer}
+        onClose={closeModal}
         onSave={(patch) => {
           updateAttributes(patch);
-          closeDrawer();
+          closeModal();
         }}
       />
     </NodeViewWrapper>

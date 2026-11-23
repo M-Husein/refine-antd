@@ -191,7 +191,14 @@
     overflow-x: auto;
   }
 
-  // 
+  .antModalFull .a-modal {
+    margin: 0;
+    width: 100% !important;
+    max-width: 100%;
+  }
+  .antModalFull .a-modal-container {
+    border-radius: 0;
+  }
 }
 
 // Always compile Here

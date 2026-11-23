@@ -85,7 +85,7 @@ Needs the Refine context (the FilePicker uses `useTranslate`).
 
 ### Edit image
 
-**Edit image** (the button on a selected image) opens a **drawer on the right**, without a mask: the editor stays visible and usable behind it. It has three tabs:
+**Edit image** (the button on a selected image) opens a **modal in two columns**, like an image viewer: a **live preview on the left**, the form on the right. It has three tabs:
 
 | Tab | Fields |
 | --- | --- |
@@ -94,12 +94,12 @@ Needs the Refine context (the FilePicker uses `useTranslate`).
 | Caption | Alt text, Caption, Caption Align |
 
 How it behaves:
-- **Edits are staged.** Nothing reaches the document until **Save**. Save applies every change in **one transaction, so one Ctrl+Z undoes all of it**. **Cancel**, the close button and **Esc** discard the draft, and a drawer you open again always starts from the image's current values. Save stays disabled while nothing differs from the start.
+- **Live preview.** The preview renders the draft with the same figure component as the editor. The **XS / SM / MD / Large** switcher above it picks the range to preview (frames of 375, 640 and 768 px, Large = the whole pane) and shows the width that range really gets: its responsive value, else Width (all size). Gray placeholder lines make float and align visible.
+- **Edits are staged.** Nothing reaches the document until **Save**. Save applies every change in **one transaction, so one Ctrl+Z undoes all of it**. **Cancel**, the close button and **Esc** discard the draft, and a modal you open again always starts from the image's current values. Save stays disabled while nothing differs from the start.
+- **A click on the mask does nothing**, so a stray click never throws the staged edits away.
 - Only the fields you changed are written, so an untouched field (for example a `480px` width that the form cannot show) is never rewritten.
-- The drawer does **not** depend on the selection: clicking the text in the editor does not close it, and Save still applies to the image it was opened for.
-- **One drawer at a time.** Opening the drawer of another image closes the previous one and discards its unsaved edits.
-- The **resize handles are hidden** while the drawer is open (they would change the width behind the draft's back); drag them when the drawer is closed.
-- The body scrolls by itself and the Save / Cancel footer is always visible, also on a laptop screen (about 650px high) and on a phone.
+- On screens narrower than 768px the preview sits on top of the form. The body scrolls by itself and the Save / Cancel footer is always visible, also on a laptop screen (about 650px high) and on a phone.
+- Not yet: zoom and previous / next image navigation.
 
 ### Image width values
 
@@ -201,7 +201,7 @@ The HTML written by the editor (the `html` format and the HTML fallback inside M
 
 ## Known limitations
 
-- **No i18n yet.** UI texts are hardcoded in English and are not yet routed through `useTranslate` (Refine). Affected: control tooltips and labels, Link/Image/Video/Audio/Embed/Math popovers (labels, placeholders, buttons), the image "Edit image" drawer (tabs, labels and buttons, including the responsive width labels), the ImageControl modal title (`Insert image`; the FilePicker inside is already translatable), table size picker and toolbar, code block header (`Code language`, `Code theme`, `Copy code`). To do: move them to the locale files.
+- **No i18n yet.** UI texts are hardcoded in English and are not yet routed through `useTranslate` (Refine). Affected: control tooltips and labels, Link/Image/Video/Audio/Embed/Math popovers (labels, placeholders, buttons), the image "Edit image" modal (tabs, labels and buttons, including the responsive width labels), the ImageControl modal title (`Insert image`; the FilePicker inside is already translatable), table size picker and toolbar, code block header (`Code language`, `Code theme`, `Copy code`). To do: move them to the locale files.
 - `createEditorExtensions()` (and `extensions` in general) must be a stable reference; a new array on each render rebuilds the editor.
 - `readOnly` is a temporary lock, not a viewer.
 - Uses the CSS classes `rte-*` (`../styles`); `mathlive/static.css` is imported by the component.

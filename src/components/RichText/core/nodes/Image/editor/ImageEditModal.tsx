@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Button, Drawer, Flex, Input, InputNumber, Segmented, Space, Tabs, Typography } from "antd";
+import { Button, Flex, Input, InputNumber, Modal, Segmented, Space, Tabs, Typography } from "antd";
 import {
   AlignLeftOutlined,
   AlignCenterOutlined,
@@ -13,6 +13,7 @@ import type {
   ImageResponsiveKey,
   ImageResponsiveMode,
 } from "../types";
+import { ImageFigure } from "../shared/ImageFigure";
 import {
   DEFAULT_RESPONSIVE_MODE,
   RESPONSIVE_DEVICES,
@@ -30,11 +31,20 @@ const { Text } = Typography;
 const sizePresets = ["25%", "50%", "75%", "100%"];
 const displayModeOptions: ImageDisplayMode[] = ["block", "float-left", "float-right"];
 
+type PreviewRange = "xs" | "sm" | "md" | "large";
+// Representative frame widths: a phone, a large phone, a tablet; Large uses the whole pane.
+const PREVIEW_RANGES: { key: PreviewRange; label: string; frame: number | string }[] = [
+  { key: "xs", label: "XS", frame: 375 },
+  { key: "sm", label: "SM", frame: 640 },
+  { key: "md", label: "MD", frame: 768 },
+  { key: "large", label: "Large", frame: "100%" },
+];
+
 // Same pattern as the antd "Formatter" demo; an empty value must stay empty (not "%").
 const formatPercent = (val?: number | string) => (val == null || `${val}` === "" ? "" : `${val}%`);
 const parsePercent = (val?: string) => val?.replace(/[^\d.]/g, "") as unknown as number;
 
-/** The fields the form edits. A snapshot is taken when the drawer opens. */
+/** The fields the form edits. A snapshot is taken when the modal opens. */
 export interface ImageEditValues {
   align: ImageAlign;
   displayMode: ImageDisplayMode;
@@ -46,9 +56,11 @@ export interface ImageEditValues {
   captionAlign: ImageAlign;
 }
 
-export interface ImageEditDrawerProps {
+export interface ImageEditModalProps {
   open: boolean;
-  /** Values at the moment the drawer was opened. Give the component a new `key` for every opening. */
+  /** Static image attributes, only used by the live preview. */
+  image: { src: string; title?: string; height?: string | null };
+  /** Values at the moment the modal was opened. Give the component a new `key` for every opening. */
   values: ImageEditValues;
   /** Cancel, the close button and Esc all end up here: nothing is applied. */
   onClose: () => void;
@@ -91,13 +103,14 @@ const canon = (value: unknown): unknown =>
 const same = (a: unknown, b: unknown) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
 
 /**
- * Edit form of an image, in a Drawer on the right WITHOUT a mask, so the editor stays visible and
- * usable. Edits are staged in a local draft and applied together by **Save** (one undo step);
- * Cancel, the close button and Esc throw the draft away.
+ * Edit form of an image in a Modal: a live preview on the left, the form on the right.
+ * Edits are staged in a local draft and applied together by **Save** (one undo step);
+ * Cancel, the close button and Esc throw the draft away. A click on the mask does nothing.
  */
-export const ImageEditDrawer = ({ open, values, onClose, onSave }: ImageEditDrawerProps) => {
+export const ImageEditModal = ({ open, image, values, onClose, onSave }: ImageEditModalProps) => {
   const [initial] = useState(values);
   const [draft, setDraft] = useState(values);
+  const [previewRange, setPreviewRange] = useState<PreviewRange>("large");
   // The mode is stored together with the values; until the first value exists the choice is kept here.
   const [pendingMode, setPendingMode] = useState<ImageResponsiveMode>(DEFAULT_RESPONSIVE_MODE);
   const responsiveMode = draft.responsive?.mode ?? pendingMode;
@@ -127,6 +140,11 @@ export const ImageEditDrawer = ({ open, values, onClose, onSave }: ImageEditDraw
   if (draft.caption !== initial.caption) patch.caption = draft.caption || null;
   if (draft.captionAlign !== initial.captionAlign) patch.captionAlign = draft.captionAlign;
   const dirty = Object.keys(patch).length > 0;
+
+  // The width the chosen range really gets (computed here: the preview renders without responsive CSS).
+  const rangeValue = previewRange === "large" ? undefined : draft.responsive?.[previewRange];
+  const effective = rangeValue != null ? `${rangeValue}%` : draft.width;
+  const rangeInfo = PREVIEW_RANGES.find((r) => r.key === previewRange)!;
 
   const layout = (
     <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
@@ -264,38 +282,76 @@ export const ImageEditDrawer = ({ open, values, onClose, onSave }: ImageEditDraw
   );
 
   return (
-    <Drawer
+    <Modal
       open={open}
-      onClose={onClose}
-      title="Edit image"
-      placement="right"
-      size={380}
-      zIndex={1052}
-      // No mask: the editor behind stays visible and usable (clicking it does not close the drawer).
-      mask={false}
+      onCancel={onClose}
+      title={null}
+      footer={null}
+      closeIcon={null}
+      centered
       destroyOnHidden
-      styles={{
-        body: {
-          paddingTop: 0,
-        }
-      }}
-      footer={
-        <Flex justify="flex-end" gap={8}>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="primary" disabled={!dirty} onClick={() => onSave(patch)}>
-            Save
-          </Button>
-        </Flex>
-      }
+      width="min(1100px, 95vw)"
+      zIndex={1052}
+      // Clicking the mask must not throw the staged edits away.
+      mask={{ closable: false }}
+      rootClassName="rte-image-edit max-md_antModalFull"
+      styles={{ container: { padding: 0, overflow: "hidden" }, body: { padding: 0 } }}
     >
-      <Tabs
-        size="small"
-        items={[
-          { key: "layout", label: "Layout", children: layout },
-          { key: "responsive", label: "Responsive", children: responsiveTab },
-          { key: "caption", label: "Caption", children: captionTab },
-        ]}
-      />
-    </Drawer>
+      <div className="rte-image-edit__layout w-full">
+        <div className="rte-image-edit__preview">
+          <Flex align="center" justify="space-between" gap={8} wrap>
+            <Segmented
+              size="small"
+              value={previewRange}
+              onChange={(v) => setPreviewRange(v as PreviewRange)}
+              options={PREVIEW_RANGES.map((r) => ({ label: r.label, value: r.key }))}
+            />
+            <span className="rte-image-edit__info">
+              Showing: {rangeInfo.label} · {effective ?? "natural size"}
+            </span>
+          </Flex>
+          <div className="rte-image-edit__stage">
+            <div className="rte-image-edit__frame" style={{ width: rangeInfo.frame }}>
+              <ImageFigure
+                src={image.src}
+                alt={draft.alt}
+                title={image.title}
+                height={image.height}
+                caption={draft.caption || null}
+                captionAlign={draft.captionAlign}
+                displayMode={draft.displayMode}
+                align={draft.align}
+                width={effective}
+                responsive={null}
+              />
+              {/* Placeholder text, so float / align are visible */}
+              <div className="rte-image-edit__lines" aria-hidden="true">
+                <i /><i /><i /><i /><i /><i />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rte-image-edit__panel">
+          <div className="rte-image-edit__title">Edit image</div>
+          <div className="rte-image-edit__tabs">
+            <Tabs
+              size="small"
+              items={[
+                { key: "layout", label: "Layout", children: layout },
+                { key: "responsive", label: "Responsive", children: responsiveTab },
+                { key: "caption", label: "Caption", children: captionTab },
+              ]}
+            />
+          </div>
+          <Flex justify="flex-end" gap={8} className="rte-image-edit__footer">
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="primary" disabled={!dirty} onClick={() => onSave(patch)}>
+              Save
+            </Button>
+          </Flex>
+        </div>
+      </div>
+    </Modal>
   );
 };

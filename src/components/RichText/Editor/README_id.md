@@ -85,7 +85,7 @@ Membutuhkan konteks Refine (FilePicker memakai `useTranslate`).
 
 ### Edit image
 
-**Edit image** (tombol pada gambar yang terpilih) membuka **drawer di kanan**, tanpa mask: editor di belakangnya tetap terlihat dan bisa dipakai. Isinya tiga tab:
+**Edit image** (tombol pada gambar yang terpilih) membuka **modal dua kolom**, seperti penampil gambar: **pratinjau langsung di kiri**, form di kanan. Isinya tiga tab:
 
 | Tab | Isi |
 | --- | --- |
@@ -94,12 +94,12 @@ Membutuhkan konteks Refine (FilePicker memakai `useTranslate`).
 | Caption | Alt text, Caption, Caption Align |
 
 Perilakunya:
-- **Edit disimpan sekaligus.** Tidak ada yang masuk ke dokumen sebelum **Save**. Save menerapkan semua perubahan dalam **satu transaksi, sehingga satu Ctrl+Z membatalkan semuanya**. **Cancel**, tombol tutup, dan **Esc** membuang draf, dan drawer yang dibuka lagi selalu mulai dari nilai gambar saat itu. Save tetap nonaktif selama tidak ada yang berbeda dari awal.
+- **Pratinjau langsung.** Pratinjau merender draf dengan komponen figure yang sama dengan editor. Pemilih **XS / SM / MD / Large** di atasnya memilih rentang yang dipratinjau (bingkai 375, 640, dan 768 px; Large = seluruh panel) dan menampilkan lebar yang benar-benar didapat rentang itu: nilai responsifnya, jika kosong Width (all size). Garis abu-abu pengganti teks membuat float dan align terlihat.
+- **Edit disimpan sekaligus.** Tidak ada yang masuk ke dokumen sebelum **Save**. Save menerapkan semua perubahan dalam **satu transaksi, sehingga satu Ctrl+Z membatalkan semuanya**. **Cancel**, tombol tutup, dan **Esc** membuang draf, dan modal yang dibuka lagi selalu mulai dari nilai gambar saat itu. Save tetap nonaktif selama tidak ada yang berbeda dari awal.
+- **Klik pada mask tidak melakukan apa-apa**, sehingga klik tak sengaja tidak membuang edit yang belum disimpan.
 - Hanya field yang Anda ubah yang ditulis, jadi field yang tidak disentuh (misalnya lebar `480px` yang tidak bisa ditampilkan form) tidak pernah ditimpa.
-- Drawer **tidak bergantung pada seleksi**: mengklik teks di editor tidak menutupnya, dan Save tetap berlaku untuk gambar tempat drawer dibuka.
-- **Satu drawer pada satu waktu.** Membuka drawer gambar lain menutup yang sebelumnya dan membuang edit yang belum disimpan.
-- **Handle resize disembunyikan** selama drawer terbuka (jika tidak, lebar berubah di belakang draf); gunakan handle saat drawer tertutup.
-- Isinya bisa digulir sendiri dan footer Save / Cancel selalu terlihat, juga di layar laptop (tinggi sekitar 650px) dan di ponsel.
+- Di layar yang lebih sempit dari 768px, pratinjau berada di atas form. Isinya bisa digulir sendiri dan footer Save / Cancel selalu terlihat, juga di layar laptop (tinggi sekitar 650px) dan di ponsel.
+- Belum ada: zoom dan navigasi gambar sebelumnya / berikutnya.
 
 ### Nilai lebar gambar
 
@@ -201,7 +201,7 @@ HTML yang ditulis editor (format `html` dan fallback HTML di dalam Markdown):
 
 ## Keterbatasan yang diketahui
 
-- **Belum ada i18n.** Teks UI di-hardcode dalam bahasa Inggris dan belum lewat `useTranslate` (Refine). Terdampak: tooltip dan label control, popover Link/Image/Video/Audio/Embed/Math (label, placeholder, tombol), drawer "Edit image" (tab, label, dan tombol, termasuk label lebar responsif), judul modal ImageControl (`Insert image`; FilePicker di dalamnya sudah bisa diterjemahkan), pemilih ukuran dan toolbar tabel, header code block (`Code language`, `Code theme`, `Copy code`). To do: pindahkan ke file locale.
+- **Belum ada i18n.** Teks UI di-hardcode dalam bahasa Inggris dan belum lewat `useTranslate` (Refine). Terdampak: tooltip dan label control, popover Link/Image/Video/Audio/Embed/Math (label, placeholder, tombol), modal "Edit image" (tab, label, dan tombol, termasuk label lebar responsif), judul modal ImageControl (`Insert image`; FilePicker di dalamnya sudah bisa diterjemahkan), pemilih ukuran dan toolbar tabel, header code block (`Code language`, `Code theme`, `Copy code`). To do: pindahkan ke file locale.
 - `createEditorExtensions()` (dan `extensions` pada umumnya) harus referensi yang stabil; array baru di setiap render membangun ulang editor.
 - `readOnly` hanya kunci sementara, bukan viewer.
 - Memakai class CSS `rte-*` (`../styles`); `mathlive/static.css` di-import oleh komponen.
