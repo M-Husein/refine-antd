@@ -5,6 +5,10 @@ import {
   AlignLeftOutlined,
   AlignCenterOutlined,
   AlignRightOutlined,
+  CaretUpOutlined,
+  CaretRightOutlined,
+  CaretDownOutlined,
+  CaretLeftOutlined,
 } from "@ant-design/icons";
 import type {
   ImageAlign,
@@ -27,7 +31,18 @@ import {
 
 const { Text } = Typography;
 
-const sizePresets = ["25%", "50%", "75%", "100%"];
+const DEFAULT_DRAWER_SIZE = 378;
+const MIN_DRAWER_SIZE = 235;
+type DrawerPlacement = "top" | "right" | "bottom" | "left";
+const PLACEMENTS: DrawerPlacement[] = ["top", "right", "bottom", "left"];
+
+// Shared by every Image drawer and kept between openings (module level, so it outlives the
+// per-opening remount and is the same for all images in the editor).
+const drawerPrefs: { placement: DrawerPlacement; size: number } = {
+  placement: "right",
+  size: DEFAULT_DRAWER_SIZE,
+};
+const sizePresets =["25%", "50%", "75%", "100%"];
 const displayModeOptions: ImageDisplayMode[] = ["block", "float-left", "float-right"];
 
 // Same pattern as the antd "Formatter" demo; an empty value must stay empty (not "%").
@@ -62,7 +77,14 @@ const alignIcons: Record<ImageAlign, ReactNode> = {
   right: <AlignRightOutlined />,
 };
 
-const AlignButtons = ({ value, onChange }: { value: ImageAlign; onChange: (value: ImageAlign) => void }) => (
+const placementIcons: Record<DrawerPlacement, ReactNode> = {
+  top: <CaretUpOutlined />,
+  left: <CaretLeftOutlined />,
+  right: <CaretRightOutlined />,
+  bottom: <CaretDownOutlined />,
+};
+
+const AlignButtons =({ value, onChange }: { value: ImageAlign; onChange: (value: ImageAlign) => void }) => (
   <Space.Compact>
     {(["left", "center", "right"] as const).map((align) => (
       <Button
@@ -96,6 +118,17 @@ const same = (a: unknown, b: unknown) => JSON.stringify(canon(a)) === JSON.strin
  * Cancel, the close button and Esc throw the draft away.
  */
 export const ImageEditDrawer = ({ open, values, onClose, onSave }: ImageEditDrawerProps) => {
+  const [placement, setPlacement] = useState<DrawerPlacement>(drawerPrefs.placement);
+  const [drawerSize, setDrawerSize] = useState(drawerPrefs.size);
+  const changePlacement = (next: DrawerPlacement) => {
+    drawerPrefs.placement = next;
+    setPlacement(next);
+  };
+  const changeDrawerSize = (next: number) => {
+    const size = Math.max(MIN_DRAWER_SIZE, next);
+    drawerPrefs.size = size;
+    setDrawerSize(size);
+  };
   const [initial] = useState(values);
   const [draft, setDraft] = useState(values);
   // The mode is stored together with the values; until the first value exists the choice is kept here.
@@ -268,8 +301,24 @@ export const ImageEditDrawer = ({ open, values, onClose, onSave }: ImageEditDraw
       open={open}
       onClose={onClose}
       title="Edit image"
-      placement="right"
-      size={380}
+      placement={placement}
+      extra={
+        <Space.Compact>
+          {PLACEMENTS.map((side) => (
+            <Button
+              key={side}
+              size="small"
+              type={placement === side ? "primary" : "default"}
+              icon={placementIcons[side]}
+              title={`Dock ${side}`}
+              aria-label={`Dock ${side}`}
+              onClick={() => changePlacement(side)}
+            />
+          ))}
+        </Space.Compact>
+      }
+      size={drawerSize}
+      resizable={{ onResize: changeDrawerSize }}
       zIndex={1052}
       // No mask: the editor behind stays visible and usable (clicking it does not close the drawer).
       mask={false}
